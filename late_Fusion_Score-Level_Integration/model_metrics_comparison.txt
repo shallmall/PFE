@@ -1,0 +1,51 @@
+========================================================================================
+             LATE FUSION REPUTATION AI: MODEL METRICS COMPARISON TABLE
+========================================================================================
+
+Evaluated strictly on the chronological 10% Test Split (38,174 transactions).
+Features used (Point-in-Time, Zero Leakage):
+  1. bert_spam_prob (BERT Text Spam probability)
+  2. gnn_reviewer_score (HGAT Reviewer anomaly score)
+  3. gnn_product_score (HGAT Product anomaly score)
+  4. user_historical_fake_ratio (Shifted user % flagged past reviews)
+  5. user_avg_past_bert_score (Shifted user avg past BERT spam prob)
+  6. product_historical_fake_ratio (Shifted product % flagged past reviews)
+
+------------------------------------------------------------------------------------------------------------------------------------
+TABLE 1: REVIEWER REPUTATION SCORING HEAD
+(Evaluated on Semi-Supervised Masked Labeled Subset)
+------------------------------------------------------------------------------------------------------------------------------------
+Model Architecture                Accuracy  ROC-AUC   Prec-Fake  Rec-Fake  F1-Fake   Prec-Real  Rec-Real  F1-Real
+------------------------------------------------------------------------------------------------------------------------------------
+XGBoost Classifier                0.9318    0.9751    0.9727     0.9388    0.9555    0.8083     0.9072    0.8549
+LightGBM Classifier               0.9290    0.9750    0.9702     0.9376    0.9537    0.8038     0.8987    0.8486
+Multi-Layer Perceptron (MLP)      0.9262    0.9742    0.9678     0.9365    0.9519    0.7992     0.8903    0.8423
+Logistic Regression (ElasticNet)  0.9122    0.9628    0.9625     0.9233    0.9425    0.7638     0.8734    0.8150
+------------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------------------
+TABLE 2: PRODUCT (REVIEWEE) REPUTATION SCORING HEAD
+(Evaluated on 100% Labeled Test Set)
+------------------------------------------------------------------------------------------------------------------------------------
+Model Architecture                Accuracy  ROC-AUC   Prec-Fake  Rec-Fake  F1-Fake   Prec-Real  Rec-Real  F1-Real
+------------------------------------------------------------------------------------------------------------------------------------
+LightGBM Classifier               0.9807    0.9972    0.9840     0.9711    0.9775    0.9782     0.9880    0.9831
+XGBoost Classifier                0.9790    0.9966    0.9867     0.9643    0.9754    0.9734     0.9901    0.9817
+Multi-Layer Perceptron (MLP)      0.9714    0.9918    0.9928     0.9405    0.9660    0.9566     0.9948    0.9753
+Logistic Regression (ElasticNet)  0.9660    0.9873    0.9768     0.9437    0.9599    0.9583     0.9829    0.9705
+------------------------------------------------------------------------------------------------------------------------------------
+
+========================================================================================
+SAVED MODEL ARTIFACTS LOCATION:
+All trained weights and feature scalers are stored in:
+c:\Users\laake\Downloads\gnn_fraud_detection\late_Fusion_Score-Level_Integration\saved_models\
+  - standard_scaler.joblib
+  - xgboost_product_model.joblib
+  - xgboost_reviewer_model.joblib
+  - lightgbm_product_model.joblib
+  - lightgbm_reviewer_model.joblib
+  - logistic_regression_product_model.joblib
+  - logistic_regression_reviewer_model.joblib
+  - mlp_product_model.joblib
+  - mlp_reviewer_model.joblib
+========================================================================================

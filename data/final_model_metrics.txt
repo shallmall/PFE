@@ -1,0 +1,28 @@
+--- THGAT 2-Head Fraud Detection Model Test Set Metrics (Semi-Supervised Product Auxiliary Bridge) ---
+Optimal Macro-F1 Thresholds (Tuned on Val) -> Reviewer: 0.37, Review: 0.395
+
+--- Reviewer Head (Test Set: 3,677 Labeled Reviewers) ---
+Accuracy: 0.8762 | ROC-AUC: 0.9360 | PR-AUC: 0.9603 | F1-Macro: 0.8664
+  [Real/0] Precision: 0.8557 | Recall: 0.8061 | F1: 0.8302
+  [Fake/1] Precision: 0.8873 | Recall: 0.9183 | F1: 0.9026
+
+--- Review Head (Test Set: 8,029 Labeled Reviews) ---
+Accuracy: 0.6571 | ROC-AUC: 0.7987 | PR-AUC: 0.8721 | F1-Macro: 0.6469
+  [Real/0] Precision: 0.4509 | Recall: 0.8408 | F1: 0.5870
+  [Fake/1] Precision: 0.8996 | Recall: 0.5821 | F1: 0.7068
+
+--- Full Graph Population Evaluation ---
+Full Labeled Reviewers (36,764 Reviewers): Accuracy: 0.8730 | ROC-AUC: 0.9366 | PR-AUC: 0.9609
+Full Labeled Reviews (80,281 Reviews): Accuracy: 0.6560 | ROC-AUC: 0.8030 | PR-AUC: 0.8782
+
+--- Unlabeled Nodes Inference Breakdown ---
+Unlabeled Reviewers (297,578): Predicted Fake = 23,425 (7.87%), Predicted Honest = 274,153 (92.13%)
+Unlabeled Reviews (301,453): Predicted Fake = 16,102 (5.34%), Predicted Honest = 285,351 (94.66%)
+
+--- Graph Architecture & Methodology Notes ---
+Reviewer Node Input Dim: 7
+Product Node Input Dim: 3 (Auxiliary bridge in message passing, no classification head)
+Review Node Input Dim: 5 (Time-Aware Features via expanding historical ratings mean & zero-leakage product lifecycle offset)
+Classification Heads: 2 (Reviewer, Review)
+Split Strategy: Random 80% Train / 10% Val / 10% Test (Seed 42)
+Early Stopping Epoch: 106

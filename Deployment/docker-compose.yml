@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fraud_db_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: fraud_detection_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fraud_detection_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  orchestrator:
+    build:
+      context: ..
+      dockerfile: Deployment/Dockerfile.orchestrator
+    container_name: fraud_layer2_orchestrator
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres_password@postgres:5432/fraud_detection_db
+      AI_ENGINE_URL: http://ai_engine:8002/v1/score_batch
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn Deployment.orchestrator.app:app --host 0.0.0.0 --port 8001 --workers 4
+
+  ai_engine:
+    build:
+      context: ..
+      dockerfile: Deployment/Dockerfile.ai_engine
+    container_name: fraud_layer1_ai_engine
+    restart: always
+    ports:
+      - "8002:8002"
+    environment:
+      ORCHESTRATOR_URL: http://orchestrator:8001/api/v1/history
+    command: uvicorn Deployment.ai_engine.app:app --host 0.0.0.0 --port 8002 --workers 1
+
+volumes:
+  postgres_data:

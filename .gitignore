@@ -1,0 +1,117 @@
+# ==============================================================================
+# E-Commerce Fraud Detection & AI Reputation System - .gitignore
+# ==============================================================================
+# Excludes all heavy datasets, generated feature tables, PyTorch graph tensors,
+# trained model weights, checkpoints, and environment artifacts.
+# Only source code, documentation, and lightweight benchmark summaries are tracked.
+
+# ── 1. Python & IDE Environment ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDE & OS Artifacts
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log
+
+# AI Assistant & System Logs
+.gemini/
+.agents/
+.system_generated/
+
+# ── 2. Heavy Datasets & Generated CSVs ──────────────────────────────────────
+# Raw and enriched CSV datasets (can be regenerated or downloaded)
+data/*.csv
+data/*.parquet
+data/*.jsonl
+data/*.tsv
+*.csv
+*.parquet
+*.tsv
+
+# Exception: Keep tiny sample batches or schema configs if needed
+!Deployment/sample_test_batch.json
+
+# ── 3. PyTorch Geometric Graphs & Tensor Data ────────────────────────────────
+# Built graph tensors and processed PyG datasets
+data/*.pt
+data/*.pth
+data/processed/
+data/raw/
+*.pt
+*.pth
+
+# ── 4. Trained Model Weights, Binaries & Checkpoints ─────────────────────────
+# Scikit-Learn / XGBoost / LightGBM saved models and scalers
+*.joblib
+*.pkl
+*.model
+saved_models/
+HGT_Model/saved_models/
+late_Fusion_Score-Level_Integration/saved_models/
+baseline_experiment/saved_models/
+
+# DeBERTa / HuggingFace Transformer Checkpoints & Weights
+*.bin
+*.safetensors
+*.h5
+*.onnx
+SpamVis_DeBERTa-v3-base_Model/*.bin
+SpamVis_DeBERTa-v3-base_Model/*.safetensors
+SpamVis_DeBERTa-v3-base_Model/*.pt
+SpamVis_DeBERTa-v3-base_Model/checkpoint-*/
+SpamVis_DeBERTa-v3-base_Model/training_args.bin
+runs/
+
+# ── 5. Databases & Ledger State ──────────────────────────────────────────────
+# SQLite databases and blockchain simulation logs
+*.db
+*.sqlite
+*.sqlite3
+Deployment/*.db
+Deployment/fraud_detection.db
+Deployment/test_*.db
+alastria_keystore.json
+
+# ── 6. Generated Plots & Images ──────────────────────────────────────────────
+# Evaluation charts and feature importance plots (can be regenerated via scripts)
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+late_Fusion_Score-Level_Integration/*.png
+late_Fusion_Score-Level_Integration/*.pdf
+baseline_experiment/*.png
+HGT_Model/*.png

@@ -1,0 +1,15 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+
+# Install AI engine dependencies
+RUN pip install --no-cache-dir fastapi uvicorn pydantic httpx numpy scikit-learn xgboost joblib
+
+# Copy project files
+COPY Deployment ./Deployment
+
+EXPOSE 8002
+CMD ["uvicorn", "Deployment.ai_engine.app:app", "--host", "0.0.0.0", "--port", "8002"]

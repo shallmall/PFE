@@ -1,0 +1,50 @@
+Smart Contract Architecture Report: ReputationLedger
+This report breaks down the exact technical, economic, and security decisions embedded in the ReputationLedger smart contract. Every line of code has been strictly optimized for Ethereum’s execution environment, prioritizing long-term gas efficiency, mathematical safety, and node stability.
+
+1. Data Storage & Struct Architecture
+The core triumph of this contract is its dual-table storage architecture. Because Ethereum charges premium gas prices for storage, the data is split into two specialized structures to exploit how Ethereum packs data into its rigid 32-byte storage slots.
+
+Table 1: The "Heavy" Review Table (ReviewRecord)
+This table serves as the permanent, detailed ledger for individual reviews. It uses a 1-to-1 mapping (mapping(bytes16 => ReviewRecord)).
+
+Struct Size: 24 bytes (bytes16 + uint48 + uint8 + uint8).
+
+The "Why": Because a mapping guarantees each entry gets its own isolated 32-byte storage slot, filling it with 24 bytes of data wastes almost no space.
+
+The ID Security: We use bytes16 (128-bit) IDs. This provides the exact same cryptographic collision resistance as standard UUIDs (requiring trillions of records before risking a duplicate), while keeping the struct small enough to fit in a single slot.
+
+The Timestamp: Using uint48 ensures the timestamp is future-proofed against integer overflow for over 8 million years.
+
+Table 2: The "Light" Historical Table (ReviewerHistoryRecord)
+This table tracks the chronological timeline of a user's reputation. It uses an array mapping (mapping(bytes16 => ReviewerHistoryRecord[])).
+
+Struct Size: 5 bytes (uint32 + uint8).
+
+The "Why": Arrays in Solidity store items side-by-side. By keeping this struct strictly at 5 bytes, the Ethereum Virtual Machine (EVM) automatically packs six complete records into a single 32-byte slot (6 × 5 = 30 bytes). Writing to an existing slot is exponentially cheaper than opening a new one, meaning the contract gets six historical saves for the price of one storage initialization.
+
+The Trade-off: The uint32 timestamp will overflow in the year 2106. This is a deliberate, pragmatic engineering choice: maximizing gas savings for the current century over hypothetical 100-year infrastructure.
+
+2. Security and Error Handling
+The contract uses modern Solidity patterns to prevent silent failures and reduce execution costs.
+
+Custom Errors (e.g., error Unauthorized();): Instead of using traditional string revert messages (which cost gas to store on the blockchain), custom errors return a tiny, computationally cheap selector code to the backend.
+
+Duplicate Protection (timestamp != 0): By checking if a review slot already has a timestamp, the contract completely prevents malicious or accidental overwriting of immutable records.
+
+Math Underflow Protection: In the pagination logic, explicitly checking if (totalCount == 0) and returning an empty array immediately prevents the EVM from attempting to subtract from zero, which would cause a fatal panic/crash and freeze the query.
+
+3. Access Control (Ownership)
+The contract utilizes a centralized, two-step ownership model.
+
+Single-Writer Model (onlyOwner): Only the designated backend/owner wallet can write data. This completely bypasses the need for complex, gas-heavy on-chain signature verification. The backend acts as the trusted validator and calculator, treating the blockchain strictly as an immutable storage drive.
+
+Two-Step Transfer (transferOwnership & acceptOwnership): If control of the contract ever needs to be handed to a new wallet, the new owner must explicitly send a transaction to "accept" it. This prevents the catastrophic scenario of a typo sending ownership to a dead address, permanently locking the contract.
+
+4. Read Optimization & Node Stability
+Blockchain nodes will crash or time out if a user requests too much data at once. The read functions are heavily armored against this.
+
+The Hard Cap: getReviewerHistory strictly limits retrieval to 1,000 records. If a power-user exceeds this, the contract throws HistoryTooLargeUsePagination(), acting as a circuit breaker to protect the node.
+
+Pagination (getReviewerHistoryPaginated): This allows the backend to safely request massive histories in bite-sized chunks (e.g., limits of 50 or 100). The math is dynamic, safely clamping the _limit if the user requests an offset too close to the end of the array, preventing out-of-bounds errors.
+
+This architecture represents a production-grade ledger ready for high-volume deployment.

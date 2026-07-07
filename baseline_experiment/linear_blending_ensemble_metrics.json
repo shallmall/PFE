@@ -1,0 +1,37 @@
+{
+    "review_head_weights": {
+        "x1_text_centric": 0.55,
+        "y1_behavior_centric": 0.44999999999999996,
+        "threshold": 0.45000000000000007
+    },
+    "review_head_metrics": {
+        "acc": 0.8374540698760665,
+        "roc_auc": 0.8961770942443191,
+        "pr_auc": 0.955330182832091,
+        "f1_macro": 0.8033232614617614,
+        "prec_fake": 0.8994907531492897,
+        "rec_fake": 0.8714619579330044,
+        "f1_fake": 0.8852545502505935,
+        "prec_real": 0.6946957236842105,
+        "rec_real": 0.7502220248667851,
+        "f1_real": 0.7213919726729291
+    },
+    "reviewer_head_weights": {
+        "w1_behavior_centric": 0.42,
+        "w2_current_text_centric": 0.0,
+        "w3_hist_mean_text_centric": 0.58,
+        "threshold": 0.45000000000000007
+    },
+    "reviewer_head_metrics": {
+        "acc": 0.8489132465591331,
+        "roc_auc": 0.9086356430684194,
+        "pr_auc": 0.9597343976026886,
+        "f1_macro": 0.8156457203027443,
+        "prec_fake": 0.9029580573951435,
+        "rec_fake": 0.8851380593785164,
+        "f1_fake": 0.8939592621732669,
+        "prec_real": 0.7195688926458157,
+        "rec_real": 0.7559946714031972,
+        "f1_real": 0.7373321784322218
+    }
+}

@@ -1,0 +1,30 @@
+[project]
+name = "gnn-fraud-detection"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.109.2",
+    "uvicorn[standard]>=0.27.1",
+    "pydantic>=2.6.1",
+    "sqlalchemy>=2.0.27",
+    "web3>=6.15.1",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.0.0",
+    "torch>=2.4.0",
+    "torch-geometric>=2.5.0",
+    "transformers<4.48.0",
+    "xgboost>=2.0.3",
+    "lightgbm>=4.3.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchvision = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
