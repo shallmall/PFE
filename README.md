@@ -138,16 +138,39 @@ pm2 start ".venv/Scripts/python.exe" --name "alastria-worker" -- Deployment/web3
 
 ---
 
+## Experimental Benchmarks & Code Roadmap
+
+This repository is structured around three core empirical experiments evaluated across the academic thesis, along with a live blockchain verification tool. Each experiment corresponds directly to a dedicated directory in the project root:
+
+### 1. Experiment 1: Baseline Machine Learning Classifiers (`./baseline_experiment`)
+Contains the complete code for evaluating standard ML baselines on both review-centric text metrics and reviewer-centric behavioral metrics:
+* **Text-Centric Baseline Models**: Logistic Regression, Random Forest, XGBoost, and LightGBM (`train_text_centric_model.py`).
+* **Behavioral-Centric Baseline Models**: Evaluates reviewer metadata anomalies and statistical patterns (`train_behavior_centric_model.py`).
+* **Linear Blending Ensemble**: Evaluates optimal score-level blending of text and behavioral predictions (`evaluate_linear_blending_ensemble.py`).
+
+### 2. Experiment 2: Semantic Transformer Fine-Tuning (`./SpamVis_DeBERTa-v3-base_Model`)
+Contains the Jupyter notebooks and scripts used to fine-tune the **DeBERTa-v3-base** transformer model (`microsoft/deberta-v3-base`) for advanced semantic fraud detection and review text classification across the e-commerce dataset (`run_deberta_csv_inference.py`, `evaluate_deberta.py`, and interactive `.ipynb` training workflows).
+
+### 3. Experiment 3: Heterogeneous Graph Transformer & Late Fusion (`./HGT_Heterogeneous_Graph_Model` & `./late_Fusion_Score-Level_Integration`)
+The culmination of the thesis architecture, capturing complex structural network topologies and fusing them with semantic language representations:
+* **`./HGT_Heterogeneous_Graph_Model`**: Contains the PyTorch Geometric training script (`train.py`) and model definitions (`models.py`, `dataset.py`) for the Heterogeneous Graph Transformer (HGT) across bipartite `Reviewer <-> Review` graphs.
+* **`./late_Fusion_Score-Level_Integration`**: Contains the code for combining DeBERTa-v3 semantic scores with HGT graph embeddings via gradient boosting meta-classifiers (`train_late_fusion_models.py`), achieving optimal macro F1 and AUC performance across both reviewer recruitment rings and fake review text.
+
+### 4. Cryptographic Blockchain Ledger Verification (`./Deployment/verifier/public_verifier_cli.py`)
+Provides a command-line interface (`public_verifier_cli.py`) that interacts directly with the live **Alastria Red T** decentralized blockchain network (`ReputationLedger.sol`). Independent auditors can cryptographically verify any review reputation score, transaction hash (`0x...`), or mining block confirmation receipt directly on-chain without requiring access to our internal SQLite database.
+
+---
+
 ## Public Verification CLI (`public_verifier_cli.py`)
 
 Independent auditors or consumers can verify any score on the blockchain without accessing the local database:
 
 ```powershell
 # Verify an individual review directly from the smart contract by Review ID (0x...):
-uv run python Deployment/verifier/public_verifier_cli.py --review-id 0x1234567890abcdef1234567890abcdef
+uv run python ./Deployment/verifier/public_verifier_cli.py --review-id 0x1234567890abcdef1234567890abcdef
 
 # Verify a mining receipt transaction hash directly on-chain:
-uv run python Deployment/verifier/public_verifier_cli.py --tx-hash 0xabcdef...
+uv run python ./Deployment/verifier/public_verifier_cli.py --tx-hash 0xabcdef...
 ```
 
 ---
