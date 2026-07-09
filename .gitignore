@@ -52,6 +52,7 @@ Thumbs.db
 
 # ── 2. Heavy Datasets & Generated CSVs ──────────────────────────────────────
 # Raw and enriched CSV datasets (can be regenerated or downloaded)
+data/public_reviews_dataset_cleaned.csv
 data/*.csv
 data/*.parquet
 data/*.jsonl
