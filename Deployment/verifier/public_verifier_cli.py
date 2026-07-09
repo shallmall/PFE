@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Layer 4: Standalone Public Verifier CLI (Trustless On-Chain Reader)
 ====================================================================
@@ -11,14 +10,14 @@ verify transaction receipts.
 
 Usage Examples:
 ---------------
-1. Verify a specific Review ID:
-   python public_verifier_cli.py --review-id "AMAZON_US:R1001"
+1. Verify a specific Review ID (using true Universal ID or 16-byte Keccak hash):
+   python public_verifier_cli.py --review-id "0x11112222333344445555666677778888"
 
 2. Verify a Reviewer's current reputation score:
-   python public_verifier_cli.py --reviewer-id "AMAZON_US:REV888"
+   python public_verifier_cli.py --reviewer-id "0x7e555af8d58b53d11a26a08fe6e7a605"
 
 3. Verify a Reviewer's complete historical score progression:
-   python public_verifier_cli.py --reviewer-id "AMAZON_US:REV888" --history
+   python public_verifier_cli.py --reviewer-id "0x7e555af8d58b53d11a26a08fe6e7a605" --history
 
 4. Verify an immutable Mining Receipt Hash (decodes RecordSaved event logs):
    python public_verifier_cli.py --tx-hash 0x19387c2f...
@@ -46,11 +45,55 @@ except ImportError:
     sys.exit(1)
 
 # Default Alastria Red T RPC Endpoints
-DEFAULT_RPC_URL = os.getenv("ALASTRIA_RPC_URL", "http://serezade.ujaen.es:8030/art/alastria")
-DEFAULT_CONTRACT_ADDRESS = os.getenv("ALASTRIA_CONTRACT_ADDRESS", "0xF2E246BB76DF876Cef8b38ae84130F4F55De395b")
+DEFAULT_RPC_URL = os.getenv("ALASTRIA_RPC_URL", "http://sinbad2.ujaen.es:8012")
+DEFAULT_CONTRACT_ADDRESS = os.getenv("ALASTRIA_CONTRACT_ADDRESS", "0x729F000825fBaC462ad694700E51D5C719459bEE")
 
 # Minimal ABI required for trustless verification reading
 VERIFIER_ABI = [
+    {
+        "inputs": [
+            {"internalType": "bytes16", "name": "_entity_id", "type": "bytes16"},
+            {"internalType": "uint8", "name": "_entity_bit", "type": "uint8"}
+        ],
+        "name": "getEntityScore",
+        "outputs": [
+            {
+                "components": [
+                    {"internalType": "bytes16", "name": "entityId", "type": "bytes16"},
+                    {"internalType": "uint64", "name": "timestamp", "type": "uint64"},
+                    {"internalType": "uint8", "name": "entityBit", "type": "uint8"},
+                    {"internalType": "uint8", "name": "aiScore", "type": "uint8"}
+                ],
+                "internalType": "struct ReputationLedger.AuditRecordView",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {"internalType": "bytes16", "name": "_entity_id", "type": "bytes16"},
+            {"internalType": "uint8", "name": "_entity_bit", "type": "uint8"}
+        ],
+        "name": "getEntityHistory",
+        "outputs": [
+            {
+                "components": [
+                    {"internalType": "bytes16", "name": "entityId", "type": "bytes16"},
+                    {"internalType": "uint64", "name": "timestamp", "type": "uint64"},
+                    {"internalType": "uint8", "name": "entityBit", "type": "uint8"},
+                    {"internalType": "uint8", "name": "aiScore", "type": "uint8"}
+                ],
+                "internalType": "struct ReputationLedger.AuditRecordView[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
     {
         "inputs": [{"internalType": "bytes16", "name": "_review_id", "type": "bytes16"}],
         "name": "getReviewDetails",
@@ -135,52 +178,78 @@ def format_timestamp(ts: int) -> str:
 
 def verify_review_id(w3: Web3, contract: Any, review_id_str: str):
     """Queries smart contract for immutable review details."""
-    print(f"\n🔍 [Mode 1] Trustless Verification for Review ID: '{review_id_str}'")
+    print(f"\n[VERIFY] [Mode 1] Trustless Verification for Review ID: '{review_id_str}'")
     rev_bytes = get_keccak_bytes16(review_id_str)
     print(f"   └── Cryptographic bytes16 Key: 0x{rev_bytes.hex()}")
     
     try:
-        record = contract.functions.getReviewDetails(rev_bytes).call()
-        reviewer_id_hex, ts, r_score, rver_score = record
-        
+        try:
+            record = contract.functions.getReviewDetails(rev_bytes).call()
+            reviewer_id_hex, ts, r_score, rver_score = record
+        except Exception:
+            # Fallback for live Alastria Red T contract (AuditRecordView)
+            record = contract.functions.getEntityScore(rev_bytes, 0).call()
+            _, ts, _, r_score = record
+            reviewer_id_hex = b'\x00' * 16
+            rver_score = r_score
+            
         if ts == 0:
-            print(f"❌ Result: NOT FOUND on blockchain! This review has not been anchored yet.")
+            print(f"[NOT FOUND] Result: NOT FOUND on blockchain! This review has not been anchored yet.")
             return
             
-        print(f"✅ Result: FOUND ON-CHAIN (Immutable Storage Slot Verified)")
+        print(f"[FOUND] Result: FOUND ON-CHAIN (Immutable Storage Slot Verified)")
         print("-" * 60)
-        print(f"   • On-Chain Reviewer Hash : 0x{reviewer_id_hex.hex()}")
+        if reviewer_id_hex != b'\x00' * 16:
+            print(f"   • On-Chain Reviewer Hash : 0x{reviewer_id_hex.hex()}")
         print(f"   • Mined Timestamp        : {format_timestamp(ts)} ({ts})")
         print(f"   • Review AI Fraud Score  : {r_score} / 100")
-        print(f"   • Reviewer Reputation    : {rver_score} / 100")
+        if reviewer_id_hex != b'\x00' * 16:
+            print(f"   • Reviewer Reputation    : {rver_score} / 100")
         print("-" * 60)
     except Exception as e:
-        print(f"❌ RPC Query Failed: {e}")
+        print(f"[ERROR] RPC Query Failed: {e}")
 
 def verify_reviewer_id(w3: Web3, contract: Any, reviewer_id_str: str, show_history: bool = False):
     """Queries smart contract for reviewer reputation score or full historical trail."""
-    print(f"\n🔍 [Mode 2] Trustless Verification for Reviewer ID: '{reviewer_id_str}'")
+    print(f"\n[VERIFY] [Mode 2] Trustless Verification for Reviewer ID: '{reviewer_id_str}'")
     rver_bytes = get_keccak_bytes16(reviewer_id_str)
     print(f"   └── Cryptographic bytes16 Key: 0x{rver_bytes.hex()}")
     
     try:
         if not show_history:
-            record = contract.functions.getCurrentReviewerScore(rver_bytes).call()
-            ts, score = record
+            try:
+                record = contract.functions.getCurrentReviewerScore(rver_bytes).call()
+                ts, score = record
+            except Exception:
+                # Fallback for live Alastria Red T contract (check bit 1, then bit 0)
+                record = contract.functions.getEntityScore(rver_bytes, 1).call()
+                _, ts, _, score = record
+                if ts == 0 and score == 0:
+                    record = contract.functions.getEntityScore(rver_bytes, 0).call()
+                    _, ts, _, score = record
+                
             if ts == 0 and score == 0:
-                print(f"❌ Result: NOT FOUND on blockchain! This reviewer has no anchored history.")
+                print(f"[NOT FOUND] Result: NOT FOUND on blockchain! This reviewer has no anchored history.")
                 return
-            print(f"✅ Result: LATEST REPUTATION SCORE VERIFIED")
+            print(f"[VERIFIED] Result: LATEST REPUTATION SCORE VERIFIED")
             print("-" * 60)
             print(f"   • Last Updated Timestamp : {format_timestamp(ts)} ({ts})")
             print(f"   • Current Reputation     : {score} / 100")
             print("-" * 60)
         else:
-            history = contract.functions.getReviewerHistory(rver_bytes).call()
+            try:
+                history = contract.functions.getReviewerHistory(rver_bytes).call()
+            except Exception:
+                # Fallback for live Alastria Red T contract (check bit 1, then bit 0)
+                raw_hist = contract.functions.getEntityHistory(rver_bytes, 1).call()
+                if not raw_hist:
+                    raw_hist = contract.functions.getEntityHistory(rver_bytes, 0).call()
+                history = [(rec[1], rec[3]) for rec in raw_hist]
+                
             if not history:
-                print(f"❌ Result: NOT FOUND on blockchain! This reviewer has no anchored history.")
+                print(f"[NOT FOUND] Result: NOT FOUND on blockchain! This reviewer has no anchored history.")
                 return
-            print(f"✅ Result: COMPLETE HISTORICAL REPUTATION TRAIL VERIFIED ({len(history)} updates)")
+            print(f"[VERIFIED] Result: COMPLETE HISTORICAL REPUTATION TRAIL VERIFIED ({len(history)} updates)")
             print("-" * 60)
             print(f"   {'Update #':<10} | {'Mined Timestamp (UTC)':<24} | {'Reputation Score':<18}")
             print("-" * 60)
@@ -188,16 +257,16 @@ def verify_reviewer_id(w3: Web3, contract: Any, reviewer_id_str: str, show_histo
                 print(f"   #{idx:<9} | {format_timestamp(ts):<24} | {score:>3} / 100")
             print("-" * 60)
     except Exception as e:
-        print(f"❌ RPC Query Failed: {e}")
+        print(f"[ERROR] RPC Query Failed: {e}")
 
 def verify_tx_hash(w3: Web3, contract: Any, tx_hash: str):
     """Fetches mining receipt and decodes RecordSaved event logs directly from the blockchain block."""
-    print(f"\n🔍 [Mode 3] Trustless Verification for Transaction Receipt Hash:")
+    print(f"\n[VERIFY] [Mode 3] Trustless Verification for Transaction Receipt Hash:")
     print(f"   └── TxHash: {tx_hash}")
     
     try:
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=10)
-        print(f"✅ Result: MINING RECEIPT FOUND (Block #{receipt.blockNumber:,})")
+        print(f"[FOUND] Result: MINING RECEIPT FOUND (Block #{receipt.blockNumber:,})")
         print("-" * 60)
         print(f"   • Gas Used           : {receipt.gasUsed:,}")
         print(f"   • Status             : {'SUCCESS (1)' if receipt.status == 1 else 'REVERTED (0)'}")
@@ -221,7 +290,7 @@ def verify_tx_hash(w3: Web3, contract: Any, tx_hash: str):
                 print(f"   {rev_h:<18} | {rver_h:<24} | {r_sc:>4} / 100 | {rver_sc:>4} / 100 | {ts_str:<20}")
             print("-" * 90)
     except Exception as e:
-        print(f"❌ Receipt Verification Failed: {e}")
+        print(f"[ERROR] Receipt Verification Failed: {e}")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -231,8 +300,8 @@ def main():
     parser.add_argument("--contract", default=DEFAULT_CONTRACT_ADDRESS, help="Deployed ReputationLedger Contract Address")
     
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--review-id", help="Verify a specific Review ID (e.g. AMAZON_US:R101 or 0x...)")
-    group.add_argument("--reviewer-id", help="Verify a Reviewer ID (e.g. AMAZON_US:REV888 or 0x...)")
+    group.add_argument("--review-id", help="Verify a specific Review ID (true Universal ID or 0x... hex hash)")
+    group.add_argument("--reviewer-id", help="Verify a Reviewer ID (true Universal ID or 0x... hex hash)")
     group.add_argument("--tx-hash", help="Verify a mining receipt hash and decode block logs (0x...)")
     
     parser.add_argument("--history", action="store_true", help="When used with --reviewer-id, displays full historical score progression")
@@ -240,7 +309,7 @@ def main():
     args = parser.parse_args()
     
     print("=" * 70)
-    print(" 🌐 ALASTRIA RED T / EVM PUBLIC VERIFIER (TRUSTLESS ON-CHAIN READER)")
+    print(" [ALASTRIA RED T / EVM PUBLIC VERIFIER] TRUSTLESS ON-CHAIN READER")
     print("=" * 70)
     print(f" • RPC Endpoint     : {args.rpc_url}")
     print(f" • Contract Address : {args.contract}")
@@ -254,11 +323,11 @@ def main():
         else:
             w3 = Web3(Web3.HTTPProvider(args.rpc_url))
             if not w3.is_connected():
-                print(f"⚠️ Warning: Could not connect to live node at {args.rpc_url}. Is the node reachable?")
+                print(f"[WARN] Warning: Could not connect to live node at {args.rpc_url}. Is the node reachable?")
             else:
-                print(f" • Provider Status  : Connected ✅ (Chain ID: {w3.eth.chain_id})")
+                print(f" • Provider Status  : Connected [OK] (Chain ID: {w3.eth.chain_id})")
     except Exception as e:
-        print(f"❌ Failed to initialize Web3 provider: {e}")
+        print(f"[ERROR] Failed to initialize Web3 provider: {e}")
         sys.exit(1)
         
     contract = w3.eth.contract(address=w3.to_checksum_address(args.contract), abi=VERIFIER_ABI)
