@@ -13,7 +13,7 @@ An enterprise-grade hybrid AI & Blockchain architecture designed to detect decep
 ## System Architecture & Directory Structure
 
 ```text
-gnn_fraud_detection/
+./
 ├── Deployment/                              # Production Stack (API, Web3 Worker, Database & Frontend)
 │   ├── ai_engine/                           # Singleton AI Model Loader & Feature Engineering Engine
 │   ├── database/                            # SQLite Off-Chain Metadata & Initial Setup (`init_db.py`)
@@ -36,8 +36,10 @@ gnn_fraud_detection/
 
 Because the cleaned e-commerce reviews dataset (`public_reviews_dataset_cleaned.csv`) is **~267 MB**, it exceeds GitHub's standard 100 MB file limit.
 To prepare the dataset:
-1. Go to the public benchmark dataset repository: [https://github.com/bretthollenbeck/fake-reviews-data](https://github.com/bretthollenbeck/fake-reviews-data) (or the project's Release assets) and download the CSV data.
-2. Place the downloaded CSV file directly inside your `./data` directory so the path is:
+1. Go to the public benchmark dataset repository: [https://github.com/bretthollenbeck/fake-reviews-data](https://github.com/bretthollenbeck/fake-reviews-data).
+2. Download the **CSV version of the dataset** (compressed archive/zip).
+3. **Unzip/extract** the downloaded archive.
+4. Place the unzipped CSV file (`public_reviews_dataset_cleaned.csv`) directly inside your **`./data`** directory so that the exact relative path is:
    ```text
    ./data/public_reviews_dataset_cleaned.csv
    ```
