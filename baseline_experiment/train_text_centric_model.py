@@ -211,8 +211,9 @@ def main():
     print("FINAL BENCHMARK RESULTS")
     print("=" * 60)
     
-    # Save to JSON
-    out_json = "text_centric_classification_metrics.json"
+    # Save to JSON right inside the script's directory (`baseline_experiment/`)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    out_json = os.path.join(script_dir, "text_centric_classification_metrics.json")
     with open(out_json, "w") as f:
         json.dump(results, f, indent=4)
     print(f"Full metrics strictly saved to {out_json}")

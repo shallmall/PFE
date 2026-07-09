@@ -275,8 +275,10 @@ def train(graph_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspat
     print(f"\nMetrics successfully saved to data/hgt_model_metrics.json and HGT_Heterogeneous_Graph_Model/hgt_model_metrics.json")
     
     model_save_path = os.path.join(model_save_dir, "best_model.pth")
+    data_model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/best_model.pth")
     torch.save(best_model_weights, model_save_path)
-    print(f"Best model weights saved to {model_save_path}")
+    torch.save(best_model_weights, data_model_path)
+    print(f"Best model weights synchronized and saved to:\n  -> {model_save_path}\n  -> {data_model_path}")
 
 if __name__ == "__main__":
     train()

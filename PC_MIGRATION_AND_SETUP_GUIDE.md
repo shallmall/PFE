@@ -4,7 +4,7 @@ This document is your **complete end-to-end instruction manual** when transferri
 
 ---
 
-## 🛑 Important: Before Transferring / Copying the Folder
+## Important: Before Transferring / Copying the Folder
 When copying the project folder (`gnn_fraud_detection`) to a USB drive or transferring it over network/cloud to the new PC:
 * **DO NOT copy the `.venv` folder**: Virtual environments contain hardcoded absolute paths specifically tied to your old PC's username (`laake`). Copying `.venv` will break Python execution on the new computer.
 * **DO NOT copy `node_modules` folders**: Like `.venv`, `node_modules` can contain OS-specific binaries.
@@ -25,7 +25,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ### 2. Install `Node.js` & `npm` (For React Frontend & PM2 Process Manager)
 Download and run the **Node.js LTS (Long Term Support)** Windows installer from the official website:
-👉 **[Download Node.js LTS (v20.x or v22.x)](https://nodejs.org/en/download/)**
+**[Download Node.js LTS (v20.x or v22.x)](https://nodejs.org/en/download/)**
 
 After installing, verify in PowerShell:
 ```powershell
@@ -115,7 +115,7 @@ pm2 logs alastria-worker
 
 ---
 
-## 💡 Troubleshooting Checklist on New PC
+## Troubleshooting Checklist on New PC
 * **If `uv` command is not found:** Manually add `$HOME\.local\bin` or `$HOME\.cargo\bin` to Windows Environment Variables (`PATH`) and restart terminal.
 * **If `npm` command is not found:** Ensure Node.js was checked to "Add to PATH" during installation.
 * **If AI models fail to load:** Ensure all model weights (`.pth` / `.joblib` / `deberta_predictions_output.csv`) were fully transferred and not skipped during file copy!

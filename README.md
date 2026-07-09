@@ -10,7 +10,7 @@ An enterprise-grade hybrid AI & Blockchain architecture designed to detect decep
 
 ---
 
-## 🏛️ System Architecture & Directory Structure
+## System Architecture & Directory Structure
 
 ```text
 gnn_fraud_detection/
@@ -32,7 +32,7 @@ gnn_fraud_detection/
 
 ---
 
-## 📦 Dataset Download & Setup Note
+## Dataset Download & Setup Note
 
 Because the raw reviews dataset (`public_reviews_dataset_cleaned.csv`) is **~267 MB**, it exceeds GitHub's standard 100 MB file limit. 
 To run the full training pipelines or initial database seed:
@@ -44,7 +44,7 @@ To run the full training pipelines or initial database seed:
 
 ---
 
-## 🚀 Installation & Setup Guide
+## Installation & Setup Guide
 
 When cloning this project from GitHub, you can set up the Python backend using either **Option A (Modern & Ultra-Fast via `uv`)** or **Option B (Standard Python via `pip`)**. Both methods fully support CUDA GPU acceleration on Windows and Linux.
 
@@ -116,9 +116,9 @@ cd ../..
 
 ---
 
-## ⚡ Running the Platform Locally
+## Running the Platform Locally
 
-Once your Python and Node.js environments are initialized, run the following steps to start the complete system:
+Once your Python and Node.js environments are initialized and the dataset (`data/public_reviews_dataset_cleaned.csv`) is in place, run the following steps:
 
 ### 1. Initialize & Seed the Off-Chain SQLite Database
 ```powershell
@@ -129,19 +129,27 @@ uv run python Deployment/database/init_db.py
 python Deployment/database/init_db.py
 ```
 
-### 2. Start the Backend API & AI Engine
-Open **Terminal 1** and start the FastAPI orchestrator service:
-```powershell
-# Using uv:
-uv run uvicorn Deployment.orchestrator.main:app --host 0.0.0.0 --port 8000 --reload
+---
 
-# Using standard pip:
-uvicorn Deployment.orchestrator.main:app --host 0.0.0.0 --port 8000 --reload
+### Method 1: All-In-One Unified Launcher (Recommended)
+Instead of opening multiple terminal windows, you can launch **all 4 microservice layers** (AI Engine, FastAPI Orchestrator, Alastria Web3 Worker, and React Frontend UI) inside **a single terminal** with real-time color-coded logging and zero DOS window pop-ups:
+
+```powershell
+uv run python Deployment/server.py
+```
+*(Press `Ctrl+C` anytime to cleanly shut down the entire microservice stack at once).*
+
+---
+
+### Method 2: Manual Multi-Terminal Launch (If running services individually)
+
+#### A. Start the Backend API & AI Engine (Terminal 1)
+```powershell
+uv run uvicorn Deployment.orchestrator.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 *API Swagger Documentation will be available at: `http://localhost:8000/docs`*
 
-### 3. Start the React Frontend Dashboard
-Open **Terminal 2** and start the Vite development server:
+#### B. Start the React Frontend Dashboard (Terminal 2)
 ```powershell
 cd Deployment/frontend
 npm run dev
@@ -161,7 +169,7 @@ pm2 start ".venv/Scripts/python.exe" --name "alastria-worker" -- Deployment/web3
 
 ---
 
-## 🔍 Public Verification CLI (`public_verifier_cli.py`)
+## Public Verification CLI (`public_verifier_cli.py`)
 
 Independent auditors or consumers can verify any score on the blockchain without accessing the local database:
 
@@ -175,5 +183,5 @@ uv run python Deployment/verifier/public_verifier_cli.py --tx-hash 0xabcdef...
 
 ---
 
-## 📄 License
+## License
 This project is developed as part of an academic thesis on Decentralized E-Commerce Fraud Detection & Reputation Management.
