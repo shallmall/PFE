@@ -5,7 +5,7 @@ from web3 import Web3
 # 1. LIVE ALASTRIA CONNECTION & CONTRACT CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
 RPC_URL = "http://sinbad2.ujaen.es:8012"
-CONTRACT_ADDRESS = "0x729F000825fBaC462ad694700E51D5C719459bEE"
+CONTRACT_ADDRESS = "0x51EA9c1D046BE57E3B461d9048176800cb3380f5"
 
 # Minimal ABI containing only the read view functions needed
 MINIMAL_ABI = [

@@ -11,16 +11,16 @@ verify transaction receipts.
 Usage Examples:
 ---------------
 1. Verify a specific Review ID (using true Universal ID or 16-byte Keccak hash):
-   python public_verifier_cli.py --review-id "0x11112222333344445555666677778888"
+   python public_verifier_cli.py --review-id "AMAZON_US:R1001"
 
 2. Verify a Reviewer's current reputation score:
-   python public_verifier_cli.py --reviewer-id "0x7e555af8d58b53d11a26a08fe6e7a605"
+   python public_verifier_cli.py --reviewer-id "AMAZON_US:REV888"
 
 3. Verify a Reviewer's complete historical score progression:
-   python public_verifier_cli.py --reviewer-id "0x7e555af8d58b53d11a26a08fe6e7a605" --history
+   python public_verifier_cli.py --reviewer-id "AMAZON_US:REV888" --history
 
 4. Verify an immutable Mining Receipt Hash (decodes RecordSaved event logs):
-   python public_verifier_cli.py --tx-hash 0x19387c2f...
+   python public_verifier_cli.py --tx-hash 0xedc0c12aafba155af3130db74e1af3ce8a16ceb9d5563b3f82996bc2fee56263
 """
 
 import argparse
@@ -46,7 +46,7 @@ except ImportError:
 
 # Default Alastria Red T RPC Endpoints
 DEFAULT_RPC_URL = os.getenv("ALASTRIA_RPC_URL", "http://sinbad2.ujaen.es:8012")
-DEFAULT_CONTRACT_ADDRESS = os.getenv("ALASTRIA_CONTRACT_ADDRESS", "0x729F000825fBaC462ad694700E51D5C719459bEE")
+DEFAULT_CONTRACT_ADDRESS = os.getenv("ALASTRIA_CONTRACT_ADDRESS", "0x51EA9c1D046BE57E3B461d9048176800cb3380f5")
 
 # Minimal ABI required for trustless verification reading
 VERIFIER_ABI = [
