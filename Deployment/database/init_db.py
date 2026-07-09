@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.db import engine, SessionLocal, Base
 from database.models import Submitter, Reviewer, Product, Review
+from orchestrator.services import generate_universal_id
 
 def init_and_seed_db(force_recreate=False):
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "offchain_fraud_detection.db")
@@ -53,10 +54,11 @@ def init_and_seed_db(force_recreate=False):
         # Create 10 historical reviewers
         reviewers = []
         for i in range(1, 11):
+            loc_id = f"USER_{i:03d}"
             rev = Reviewer(
-                universal_reviewer_id=f"AMAZON_US:USER_{i:03d}",
+                universal_reviewer_id=generate_universal_id("AMAZON_US", loc_id),
                 submitter_id="AMAZON_US",
-                reviewer_id=f"USER_{i:03d}",
+                reviewer_id=loc_id,
                 name=f"Historical Reviewer {i}",
                 current_score=random.uniform(0.1, 0.9),
                 user_avg_past_deberta_score=round(random.uniform(0.1, 0.8), 4),
@@ -68,10 +70,11 @@ def init_and_seed_db(force_recreate=False):
         # Create 5 historical products
         products = []
         for i in range(1, 6):
+            loc_id = f"PROD_{i:03d}"
             prod = Product(
-                universal_product_id=f"AMAZON_US:PROD_{i:03d}",
+                universal_product_id=generate_universal_id("AMAZON_US", loc_id),
                 submitter_id="AMAZON_US",
-                product_id=f"PROD_{i:03d}",
+                product_id=loc_id,
                 name=f"Sample Product {i}",
                 category="Electronics" if i % 2 == 0 else "Home & Kitchen",
                 created_at=now - timedelta(days=180)
@@ -101,9 +104,10 @@ def init_and_seed_db(force_recreate=False):
             ai_score = random.uniform(0.05, 0.95)
             deberta_prob = min(1.0, max(0.0, ai_score * random.uniform(0.8, 1.2)))
             is_fraud = 1 if ai_score >= 0.50 else 0
+            loc_rev_id = f"HIST_REV_{i:03d}"
 
             review = Review(
-                universal_review_id=f"AMAZON_US:HIST_REV_{i:03d}",
+                universal_review_id=generate_universal_id("AMAZON_US", loc_rev_id),
                 submitter_id="AMAZON_US",
                 reviewer_id=reviewer.universal_reviewer_id,
                 product_id=product.universal_product_id,

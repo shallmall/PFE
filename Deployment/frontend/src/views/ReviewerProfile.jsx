@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, ShieldAlert, ShieldCheck, Star, Building2, Hash, CheckCircle2, ExternalLink, Calendar, Award, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, User, ShieldAlert, ShieldCheck, Star, Building2, Hash, CheckCircle2, ExternalLink, Calendar, Award, AlertTriangle, Copy } from 'lucide-react';
 
 export default function ReviewerProfile({ reviewerId, onBack }) {
   const [reviewer, setReviewer] = useState(null);
@@ -106,9 +106,21 @@ export default function ReviewerProfile({ reviewerId, onBack }) {
               <h2 className="text-3xl font-extrabold text-white tracking-tight">
                 {reviewer?.name || reviews[0]?.reviewer_name || `Reviewer ${reviewerId}`}
               </h2>
-              <p className="text-xs text-slate-400 font-mono mt-1">
-                Universal Keccak ID: <strong className="text-slate-300">{reviewer?.universal_reviewer_id || reviewerId}</strong>
-              </p>
+              <div className="flex items-center gap-2 mt-1 font-mono text-xs">
+                <span className="text-slate-400">Universal Keccak ID:</span>
+                <strong className="text-slate-200 select-all">{reviewer?.universal_reviewer_id || reviewerId}</strong>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(reviewer?.universal_reviewer_id || reviewerId);
+                  }}
+                  title="Copy full Universal Keccak ID"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-cyan-400 transition-colors text-xs"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -123,16 +135,10 @@ export default function ReviewerProfile({ reviewerId, onBack }) {
                 </span>
               </div>
             </div>
-            <div className="text-center px-4 border-r border-slate-800">
-              <span className="text-xs text-slate-400 block mb-1">Total Reviews</span>
-              <span className="font-extrabold text-2xl text-white font-mono">
-                {reviewer?.review_count || reviews.length}
-              </span>
-            </div>
             <div className="text-center px-4">
-              <span className="text-xs text-slate-400 block mb-1">Fraud Detected</span>
-              <span className={`font-extrabold text-2xl font-mono ${(reviewer?.fraud_count || 0) > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                {reviewer?.fraud_count || reviews.filter(r => r.is_fraud === 1).length}
+              <span className="text-xs text-slate-400 block mb-1 uppercase tracking-wider font-semibold">Total Reviews</span>
+              <span className="font-extrabold text-3xl text-white font-mono">
+                {reviewer?.review_count || reviews.length}
               </span>
             </div>
           </div>
@@ -160,28 +166,10 @@ export default function ReviewerProfile({ reviewerId, onBack }) {
       ) : (
         <div className="space-y-4">
           {reviews.map((rev) => {
-            const revScore = Math.round((rev.ai_score || 0) * 100);
-            let riskLabel = "Inconclusive / Gray Area";
-            let badgeBg = "bg-amber-500/10 border-amber-500/40 text-amber-300";
-            let iconColor = "text-amber-400";
-            let borderStyle = "border-l-amber-500 bg-amber-950/10";
-            
-            if (revScore < 30) {
-              riskLabel = "Verified Authentic";
-              badgeBg = "bg-emerald-500/10 border-emerald-500/40 text-emerald-300";
-              iconColor = "text-emerald-400";
-              borderStyle = "border-l-emerald-500 bg-emerald-950/10";
-            } else if (revScore > 80) {
-              riskLabel = "High Fraud Probability";
-              badgeBg = "bg-rose-500/10 border-rose-500/40 text-rose-300";
-              iconColor = "text-rose-400";
-              borderStyle = "border-l-rose-500 bg-rose-950/10";
-            }
-
             return (
               <div 
                 key={rev.universal_review_id}
-                className={`glass-card rounded-3xl p-6 transition-all border-l-4 ${borderStyle}`}
+                className="glass-card rounded-3xl p-6 transition-all border-l-4 border-l-cyan-500 bg-slate-900/40"
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                   
@@ -210,16 +198,37 @@ export default function ReviewerProfile({ reviewerId, onBack }) {
 
                     {/* Cryptographic Badges */}
                     <div className="flex items-center flex-wrap gap-2 pt-2">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-mono text-slate-400">
-                        <Hash className="w-3 h-3 text-slate-500" />
-                        <span>ID: {rev.universal_review_id.slice(0, 16)}...</span>
-                      </span>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-mono text-slate-300">
+                        <Hash className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                        <span className="text-slate-500">ID:</span>
+                        <span className="select-all text-slate-200 font-semibold">{rev.universal_review_id}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(rev.universal_review_id);
+                          }}
+                          title="Copy full Universal Keccak ID"
+                          className="ml-1 p-0.5 hover:bg-slate-800 rounded text-slate-400 hover:text-cyan-400 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
 
                       {rev.tx_hash ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-[11px] font-mono text-cyan-300">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Alastria Red T Tx: {rev.tx_hash.slice(0, 18)}...</span>
-                        </span>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-[11px] font-mono text-cyan-300">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                          <span>Alastria Red T Tx: {rev.tx_hash}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(rev.tx_hash);
+                            }}
+                            title="Copy full Tx Hash"
+                            className="ml-1 p-0.5 hover:bg-cyan-900 rounded text-cyan-400 hover:text-white transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-800/50 text-[11px] font-mono text-amber-400">
                           <span>Pending Alastria Anchor</span>
@@ -227,21 +236,6 @@ export default function ReviewerProfile({ reviewerId, onBack }) {
                       )}
                     </div>
                   </div>
-
-                  {/* AI Score Badge Card */}
-                  <div className={`p-4 rounded-2xl border text-center min-w-[150px] flex-shrink-0 ${badgeBg}`}>
-                    <div className="flex items-center justify-center gap-1.5 mb-1 font-bold text-xs">
-                      {revScore > 80 ? <ShieldAlert className={`w-4 h-4 ${iconColor}`} /> : <ShieldCheck className={`w-4 h-4 ${iconColor}`} />}
-                      <span>{riskLabel}</span>
-                    </div>
-                    <div className="text-2xl font-extrabold font-mono">
-                      {revScore}%
-                    </div>
-                    <span className="text-[10px] text-slate-400 block mt-0.5 uppercase tracking-wider">
-                      AI Fraud Risk
-                    </span>
-                  </div>
-
                 </div>
               </div>
             );

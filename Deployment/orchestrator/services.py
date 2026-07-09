@@ -120,6 +120,14 @@ def get_historical_context(db: Session, submitter_id: str, current_timestamp: da
         reviews=[ReviewNode.from_orm(r) for r in historical_reviews]
     )
 
+def generate_universal_id(submitter_id: str, local_id: str) -> str:
+    """
+    Generates a synchronized 16-byte hex hash Universal ID across the entire system.
+    Format: 0x + 32 hex chars (SHA-256 of submitter_id:local_id truncated to 16 bytes / 32 hex digits).
+    """
+    raw_str = f"{submitter_id}:{local_id}"
+    return "0x" + hashlib.sha256(raw_str.encode('utf-8')).hexdigest()[:32]
+
 def ensure_batch_nodes(db: Session, batch: ReviewBatchInput):
     """
     Ensures reviewers and products in the new batch exist in the database,
@@ -133,7 +141,7 @@ def ensure_batch_nodes(db: Session, batch: ReviewBatchInput):
     
     for item in batch.reviews:
         # Check/Create Reviewer
-        univ_rev_id = f"{sub_id}:{item.reviewer_id}"
+        univ_rev_id = generate_universal_id(sub_id, item.reviewer_id)
         if univ_rev_id not in seen_reviewers:
             seen_reviewers.add(univ_rev_id)
             reviewer = db.query(Reviewer).filter(Reviewer.universal_reviewer_id == univ_rev_id).first()
@@ -150,7 +158,7 @@ def ensure_batch_nodes(db: Session, batch: ReviewBatchInput):
                 db.flush()
             
         # Check/Create Product
-        univ_prod_id = f"{sub_id}:{item.product_id}"
+        univ_prod_id = generate_universal_id(sub_id, item.product_id)
         if univ_prod_id not in seen_products:
             seen_products.add(univ_prod_id)
             product = db.query(Product).filter(Product.universal_product_id == univ_prod_id).first()
@@ -166,7 +174,7 @@ def ensure_batch_nodes(db: Session, batch: ReviewBatchInput):
                 db.flush()
             
         # Check/Create Review in Pending status (prevent duplicate review or duplicate reviewer-product submission crash)
-        univ_review_id = f"{sub_id}:{item.review_id}"
+        univ_review_id = generate_universal_id(sub_id, item.review_id)
         rev_prod_pair = (univ_rev_id, univ_prod_id)
         if univ_review_id in seen_reviews or rev_prod_pair in seen_reviewer_product:
             continue
@@ -200,7 +208,7 @@ def save_ai_results(db: Session, submitter_id: str, payload: ScoreResultPayload)
     """Updates reviews in database with final AI classification scores and tx hashes, and updates Reviewer reputation scores."""
     updated_count = 0
     for res in payload.results:
-        univ_review_id = f"{submitter_id}:{res.review_id}"
+        univ_review_id = generate_universal_id(submitter_id, res.review_id)
         review = db.query(Review).filter(Review.universal_review_id == univ_review_id).first()
         if review:
             review.ai_score = res.ai_score
@@ -228,7 +236,8 @@ def get_aggregated_reviewer_scores(db: Session, submitter_id: str = None) -> Lis
     
     out = []
     for rev in reviewers:
-        reviews_for_rev = db.query(Review).filter(Review.reviewer_id == rev.universal_reviewer_id).all()
+        target_rev_ids = {rev.universal_reviewer_id, rev.reviewer_id, f"AMAZON_US:{rev.reviewer_id}", generate_universal_id(rev.submitter_id or "AMAZON_US", rev.reviewer_id)}
+        reviews_for_rev = db.query(Review).filter(Review.reviewer_id.in_(list(target_rev_ids))).all()
         rev_count = len(reviews_for_rev)
         fraud_count = sum(1 for r in reviews_for_rev if r.is_fraud == 1)
         
@@ -253,7 +262,8 @@ def get_aggregated_product_scores(db: Session, submitter_id: str = None) -> List
     
     out = []
     for prod in products:
-        reviews_for_prod = db.query(Review).filter(Review.product_id == prod.universal_product_id).all()
+        target_prod_ids = {prod.universal_product_id, prod.product_id, f"AMAZON_US:{prod.product_id}", generate_universal_id(prod.submitter_id or "AMAZON_US", prod.product_id)}
+        reviews_for_prod = db.query(Review).filter(Review.product_id.in_(list(target_prod_ids))).all()
         rev_count = len(reviews_for_prod)
         fraud_count = sum(1 for r in reviews_for_prod if r.is_fraud == 1)
         avg_rating = sum(r.rating for r in reviews_for_prod) / rev_count if rev_count > 0 else 0.0
@@ -278,15 +288,35 @@ def get_review_audit_log(db: Session, submitter_id: str = None, product_id: str 
     if submitter_id:
         query = query.filter(Review.submitter_id == submitter_id)
     if product_id:
+        matching_prods = db.query(Product).filter(
+            (Product.product_id == product_id) | 
+            (Product.universal_product_id == product_id) |
+            (Product.product_id.endswith(f":{product_id}"))
+        ).all()
+        target_ids = {product_id, f"AMAZON_US:{product_id}", generate_universal_id("AMAZON_US", product_id)}
+        for p in matching_prods:
+            target_ids.add(p.universal_product_id)
+            target_ids.add(p.product_id)
         if ":" in product_id:
-            query = query.filter(Review.product_id == product_id)
-        else:
-            query = query.filter(Review.product_id.endswith(f":{product_id}"))
+            sub, loc = product_id.split(":", 1)
+            target_ids.add(generate_universal_id(sub, loc))
+            target_ids.add(loc)
+        query = query.filter(Review.product_id.in_(list(target_ids)))
     if reviewer_id:
+        matching_revs = db.query(Reviewer).filter(
+            (Reviewer.reviewer_id == reviewer_id) | 
+            (Reviewer.universal_reviewer_id == reviewer_id) |
+            (Reviewer.reviewer_id.endswith(f":{reviewer_id}"))
+        ).all()
+        target_rev_ids = {reviewer_id, f"AMAZON_US:{reviewer_id}", generate_universal_id("AMAZON_US", reviewer_id)}
+        for r in matching_revs:
+            target_rev_ids.add(r.universal_reviewer_id)
+            target_rev_ids.add(r.reviewer_id)
         if ":" in reviewer_id:
-            query = query.filter(Review.reviewer_id == reviewer_id)
-        else:
-            query = query.filter(Review.reviewer_id.endswith(f":{reviewer_id}"))
+            sub, loc = reviewer_id.split(":", 1)
+            target_rev_ids.add(generate_universal_id(sub, loc))
+            target_rev_ids.add(loc)
+        query = query.filter(Review.reviewer_id.in_(list(target_rev_ids)))
             
     reviews = query.order_by(Review.review_date.desc()).limit(limit).all()
     
@@ -320,8 +350,8 @@ def get_ledger_status_service(db: Session) -> LedgerStatusResponse:
     latest_hash = latest_rev.tx_hash if latest_rev else None
     
     return LedgerStatusResponse(
-        chain_name="Alastria Red T Permissioned Consortium Network / Simulated EVM",
-        contract_address="0xF2E246BB76DF876Cef8b38ae84130F4F55De395b",
+        chain_name="Alastria Red T Permissioned Consortium Network (Chain ID: 2020)",
+        contract_address="0x51EA9c1D046BE57E3B461d9048176800cb3380f5",
         confirmed_offchain_count=offchain_cnt,
         confirmed_onchain_count=onchain_cnt,
         pending_ledger_count=pending_cnt,

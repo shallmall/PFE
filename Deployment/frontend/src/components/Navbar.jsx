@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Search, Upload, RefreshCw, CheckCircle2, Clock, Activity, Home, BarChart3 } from 'lucide-react';
+import { Shield, Search, Upload, RefreshCw, CheckCircle2, Clock, Activity, Home, BarChart3, X } from 'lucide-react';
 
 export default function Navbar({ 
   currentView, 
@@ -83,9 +83,9 @@ export default function Navbar({
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white bg-slate-800 px-1.5 py-0.5 rounded-full"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white bg-slate-800 p-1 rounded-full"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

@@ -1,0 +1,46 @@
+{
+  "submitter_id": "AMAZON_US",
+  "api_key": "key_amazon_12345",
+  "encrypted_hash": "ad410fcf62409d7895aa0e9a0211f0f64f39bc8037449d06364c323a71e830fc",
+  "reviews": [
+    {
+      "review_id": "BATCH_REV_2001",
+      "reviewer_id": "USER_001",
+      "product_id": "PROD_001",
+      "review_text": "Exceeded all expectations! The build quality is exceptional and battery life lasts for days. Highly recommended for daily professional use.",
+      "rating": 5.0,
+      "review_date": "2026-07-08T10:15:00Z",
+      "num_photos": 3,
+      "num_helpful": 42,
+      "reviewer_name": "Historical Reviewer 1",
+      "product_name": "Sample Product 1",
+      "product_category": "Home & Kitchen"
+    },
+    {
+      "review_id": "BATCH_REV_2002",
+      "reviewer_id": "USER_002",
+      "product_id": "PROD_004",
+      "review_text": "Best purchase ever! Highly recommended to everyone. The setup was instant and customer support answered all my questions within minutes.",
+      "rating": 5.0,
+      "review_date": "2026-07-08T14:30:00Z",
+      "num_photos": 2,
+      "num_helpful": 18,
+      "reviewer_name": "Historical Reviewer 2",
+      "product_name": "Sample Product 4",
+      "product_category": "Electronics"
+    },
+    {
+      "review_id": "BATCH_REV_2003",
+      "reviewer_id": "USER_005",
+      "product_id": "PROD_002",
+      "review_text": "Good value overall. There was a minor delay in delivery due to holiday shipping, but the product works flawlessly as advertised.",
+      "rating": 4.0,
+      "review_date": "2026-07-08T18:45:00Z",
+      "num_photos": 1,
+      "num_helpful": 7,
+      "reviewer_name": "Historical Reviewer 5",
+      "product_name": "Sample Product 2",
+      "product_category": "Electronics"
+    }
+  ]
+}

@@ -10,14 +10,14 @@ verify transaction receipts.
 
 Usage Examples:
 ---------------
-1. Verify a specific Review ID (using true Universal ID or 16-byte Keccak hash):
-   python public_verifier_cli.py --review-id "AMAZON_US:R1001"
+1. Verify a specific Review ID (using true 16-byte Universal ID hex hash):
+   python public_verifier_cli.py --review-id "0x41b29c2a7300843ed40df2299f4bcee4"
 
 2. Verify a Reviewer's current reputation score:
-   python public_verifier_cli.py --reviewer-id "AMAZON_US:REV888"
+   python public_verifier_cli.py --reviewer-id "0x3681b55a9158685fa35a79a014e09001"
 
 3. Verify a Reviewer's complete historical score progression:
-   python public_verifier_cli.py --reviewer-id "AMAZON_US:REV888" --history
+   python public_verifier_cli.py --reviewer-id "0x3681b55a9158685fa35a79a014e09001" --history
 
 4. Verify an immutable Mining Receipt Hash (decodes RecordSaved event logs):
    python public_verifier_cli.py --tx-hash 0xedc0c12aafba155af3130db74e1af3ce8a16ceb9d5563b3f82996bc2fee56263
@@ -162,10 +162,15 @@ VERIFIER_ABI = [
 ]
 
 def get_keccak_bytes16(universal_id: str) -> bytes:
-    """Converts a string ID or hex string into a deterministic 16-byte (bytes16) Keccak/SHA256 hash."""
+    """Converts a Universal ID (16-byte hex hash or string format) into exact bytes16 for EVM."""
     if universal_id.startswith("0x") and len(universal_id) == 34:
         try:
             return bytes.fromhex(universal_id[2:])
+        except ValueError:
+            pass
+    if len(universal_id) == 32 and not ":" in universal_id:
+        try:
+            return bytes.fromhex(universal_id)
         except ValueError:
             pass
     return hashlib.sha256(universal_id.encode('utf-8')).digest()[:16]

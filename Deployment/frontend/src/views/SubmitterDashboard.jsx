@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, CheckCircle2, ShieldAlert, Users, Package, FileText, ArrowLeft, Building2, Award, Hash } from 'lucide-react';
+import { BarChart3, CheckCircle2, ShieldAlert, Users, Package, FileText, ArrowLeft, Building2, Award, Hash, Copy } from 'lucide-react';
 
 export default function SubmitterDashboard({ reportData, onBackToCatalog, onSelectProduct, onSelectReviewer }) {
   const [activeTab, setActiveTab] = useState('reviewers'); // 'reviewers', 'products', 'results'
@@ -146,7 +146,21 @@ export default function SubmitterDashboard({ reportData, onBackToCatalog, onSele
                   
                   return (
                     <tr key={rev.universal_reviewer_id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-bold text-cyan-400">{rev.reviewer_id}</td>
+                      <td className="p-4 font-bold text-cyan-400">
+                        <div className="flex items-center gap-1.5">
+                          <span className="select-all">{rev.universal_reviewer_id || rev.reviewer_id}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(rev.universal_reviewer_id || rev.reviewer_id);
+                            }}
+                            title="Copy full Universal Reviewer ID"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                       <td className="p-4 text-slate-200 font-sans">{rev.name || "Anonymous Reviewer"}</td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-bold text-xs ${badgeClass}`}>
@@ -160,7 +174,7 @@ export default function SubmitterDashboard({ reportData, onBackToCatalog, onSele
                       </td>
                       <td className="p-4 text-right font-sans">
                         <button 
-                          onClick={() => onSelectReviewer(rev.reviewer_id)}
+                          onClick={() => onSelectReviewer(rev.universal_reviewer_id || rev.reviewer_id)}
                           className="text-xs text-cyan-400 hover:text-cyan-300 underline font-semibold"
                         >
                           View Profile
@@ -210,7 +224,21 @@ export default function SubmitterDashboard({ reportData, onBackToCatalog, onSele
                   
                   return (
                     <tr key={prod.universal_product_id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-bold text-cyan-400">{prod.product_id}</td>
+                      <td className="p-4 font-bold text-cyan-400">
+                        <div className="flex items-center gap-1.5">
+                          <span className="select-all">{prod.universal_product_id || prod.product_id}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(prod.universal_product_id || prod.product_id);
+                            }}
+                            title="Copy full Universal Product ID"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                       <td className="p-4 text-slate-200 font-sans font-semibold">{prod.name || `Product ${prod.product_id}`}</td>
                       <td className="p-4 text-slate-400 font-sans">{prod.category || "General"}</td>
                       <td className="p-4 text-center text-amber-400 font-bold">{prod.avg_rating.toFixed(1)} / 5.0</td>
@@ -271,8 +299,22 @@ export default function SubmitterDashboard({ reportData, onBackToCatalog, onSele
                   }
                   
                   return (
-                    <tr key={res.review_id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-bold text-white">{res.review_id}</td>
+                    <tr key={res.universal_review_id || res.review_id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="p-4 font-bold text-white">
+                        <div className="flex items-center gap-1.5">
+                          <span className="select-all">{res.universal_review_id || res.review_id}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(res.universal_review_id || res.review_id);
+                            }}
+                            title="Copy full Universal Review ID"
+                            className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-cyan-300 transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                       <td className="p-4 text-center">
                         <span className={`px-2.5 py-1 rounded font-bold ${scoreClass}`}>
                           {score}% ({scoreLabel})
@@ -284,9 +326,19 @@ export default function SubmitterDashboard({ reportData, onBackToCatalog, onSele
                       <td className="p-4 text-center text-cyan-400 font-semibold">{res.status || "Confirmed"}</td>
                       <td className="p-4 text-slate-400">
                         {res.tx_hash ? (
-                          <span className="text-emerald-400 font-mono bg-slate-900 px-2 py-1 rounded border border-slate-800">
-                            {res.tx_hash.slice(0, 24)}...
-                          </span>
+                          <div className="flex items-center gap-1 text-emerald-400 font-mono bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                            <span className="select-all">{res.tx_hash}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(res.tx_hash);
+                              }}
+                              title="Copy full Tx Hash"
+                              className="p-0.5 rounded hover:bg-slate-800 text-slate-400 hover:text-emerald-300 transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-amber-400 font-mono">Pending Anchor</span>
                         )}

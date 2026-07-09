@@ -21,7 +21,7 @@ class Submitter(Base):
 class Reviewer(Base):
     __tablename__ = "reviewers"
 
-    universal_reviewer_id = Column(String, primary_key=True, index=True)  # Format: submitter_id:reviewer_id
+    universal_reviewer_id = Column(String, primary_key=True, index=True)  # Format: 16-byte hex hash (0x + 32 chars) of submitter_id:reviewer_id
     submitter_id = Column(String, ForeignKey("submitters.submitter_id"), index=True, nullable=False)
     reviewer_id = Column(String, index=True, nullable=False)
     name = Column(String, nullable=True)
@@ -36,7 +36,7 @@ class Reviewer(Base):
 class Product(Base):
     __tablename__ = "products"
 
-    universal_product_id = Column(String, primary_key=True, index=True)  # Format: submitter_id:product_id
+    universal_product_id = Column(String, primary_key=True, index=True)  # Format: 16-byte hex hash (0x + 32 chars) of submitter_id:product_id
     submitter_id = Column(String, ForeignKey("submitters.submitter_id"), index=True, nullable=False)
     product_id = Column(String, index=True, nullable=False)
     name = Column(String, nullable=True)
@@ -50,7 +50,7 @@ class Product(Base):
 class Review(Base):
     __tablename__ = "reviews"
 
-    universal_review_id = Column(String, primary_key=True, index=True)  # Format: submitter_id:review_id
+    universal_review_id = Column(String, primary_key=True, index=True)  # Format: 16-byte hex hash (0x + 32 chars) of submitter_id:review_id
     submitter_id = Column(String, ForeignKey("submitters.submitter_id"), index=True, nullable=False)
     reviewer_id = Column(String, ForeignKey("reviewers.universal_reviewer_id"), index=True, nullable=False)
     product_id = Column(String, ForeignKey("products.universal_product_id"), index=True, nullable=False)

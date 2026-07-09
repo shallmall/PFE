@@ -38,7 +38,17 @@ ALASTRIA_ENDPOINTS = [
 ]
 
 def get_keccak_bytes16(universal_id: str) -> bytes:
-    """Converts any string ID into a deterministic 16-byte (bytes16) Keccak/SHA256 hash."""
+    """Converts a Universal ID (16-byte hex hash or string format) into exact bytes16 for EVM."""
+    if universal_id.startswith("0x") and len(universal_id) == 34:
+        try:
+            return bytes.fromhex(universal_id[2:])
+        except ValueError:
+            pass
+    if len(universal_id) == 32 and not ":" in universal_id:
+        try:
+            return bytes.fromhex(universal_id)
+        except ValueError:
+            pass
     return hashlib.sha256(universal_id.encode('utf-8')).digest()[:16]
 
 def scale_score_uint8(score: float) -> int:

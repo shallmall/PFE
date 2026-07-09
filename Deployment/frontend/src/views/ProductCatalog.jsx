@@ -104,24 +104,6 @@ export default function ProductCatalog({ searchQuery, onSelectProduct }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((prod) => {
-            const riskScore = Math.round((prod.avg_ai_score || 0) * 100);
-            let riskLabel = "Inconclusive / Gray Area";
-            let riskColor = "text-amber-400";
-            let barGradient = "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-sm shadow-amber-500/50";
-            let cornerGlow = "bg-amber-500/10 group-hover:bg-amber-500/20";
-            
-            if (riskScore < 30) {
-              riskLabel = "Verified Authentic";
-              riskColor = "text-emerald-400";
-              barGradient = "bg-gradient-to-r from-teal-500 to-emerald-400 shadow-sm shadow-emerald-500/50";
-              cornerGlow = "bg-emerald-500/10 group-hover:bg-emerald-500/20";
-            } else if (riskScore > 80) {
-              riskLabel = "High Fraud Probability";
-              riskColor = "text-rose-400";
-              barGradient = "bg-gradient-to-r from-amber-500 to-rose-500 shadow-sm shadow-rose-500/50";
-              cornerGlow = "bg-rose-500/10 group-hover:bg-rose-500/20";
-            }
-            
             return (
               <div
                 key={prod.universal_product_id}
@@ -129,7 +111,7 @@ export default function ProductCatalog({ searchQuery, onSelectProduct }) {
                 className="glass-card rounded-3xl p-6 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
               >
                 {/* Top Corner Glow */}
-                <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl pointer-events-none transition-all ${cornerGlow}`} />
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl pointer-events-none transition-all bg-cyan-500/10 group-hover:bg-cyan-500/20" />
 
                 <div>
                   {/* Submitter Pill & Category */}
@@ -153,34 +135,15 @@ export default function ProductCatalog({ searchQuery, onSelectProduct }) {
                     ID: {prod.product_id}
                   </p>
 
-                  {/* Star Rating vs AI Risk Thermometer (Showcase Feature) */}
-                  <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 mb-5 space-y-3">
-                    
-                    {/* Star Rating */}
+                  {/* Star Rating Card */}
+                  <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 mb-5">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-1.5 text-amber-400 font-bold">
                         <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                         <span>{prod.avg_rating.toFixed(1)} <span className="text-xs font-normal text-slate-400">/ 5.0</span></span>
                       </div>
-                      <span className="text-xs text-slate-400">Raw Customer Rating</span>
+                      <span className="text-xs text-slate-400">Customer Rating</span>
                     </div>
-
-                    {/* Risk Thermometer Bar */}
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="text-slate-400 font-medium">AI Fraud Ring Risk:</span>
-                        <span className={`font-bold ${riskColor}`}>
-                          {riskScore}% — {riskLabel}
-                        </span>
-                      </div>
-                      <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-500 ${barGradient}`}
-                          style={{ width: `${Math.max(8, riskScore)}%` }}
-                        />
-                      </div>
-                    </div>
-
                   </div>
                 </div>
 

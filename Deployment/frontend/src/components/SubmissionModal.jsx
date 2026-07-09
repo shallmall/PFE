@@ -76,10 +76,16 @@ export default function SubmissionModal({ isOpen, onClose, onSuccess }) {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ detail: "Network error occurred" }));
-        if (res.status === 401 || res.status === 403 || (errData.detail && errData.detail.toLowerCase().includes("auth"))) {
+        const detailStr = typeof errData.detail === 'string' 
+          ? errData.detail 
+          : (Array.isArray(errData.detail) 
+              ? errData.detail.map(d => `${d.loc ? d.loc.join('.') : 'field'}: ${d.msg}`).join(', ') 
+              : JSON.stringify(errData.detail || "Unknown validation error"));
+              
+        if (res.status === 401 || res.status === 403 || (detailStr && detailStr.toLowerCase().includes("auth"))) {
           throw new Error("Submission Refused: Submitter ID not registered or API Key encryption hash mismatch.");
         }
-        throw new Error(errData.detail || `Submission failed with HTTP status ${res.status}`);
+        throw new Error(detailStr || `Submission failed with HTTP status ${res.status}`);
       }
 
       const data = await res.json();

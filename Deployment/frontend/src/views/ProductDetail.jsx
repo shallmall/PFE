@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, ShieldAlert, ShieldCheck, User, Building2, Hash, ExternalLink, Calendar, CheckCircle2, Award, Terminal } from 'lucide-react';
+import { ArrowLeft, Star, ShieldAlert, ShieldCheck, User, Building2, Hash, ExternalLink, Calendar, CheckCircle2, Award, Terminal, Copy } from 'lucide-react';
 
 export default function ProductDetail({ product, onBack, onSelectReviewer }) {
   const [reviews, setReviews] = useState([]);
@@ -12,8 +12,9 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
       setLoading(true);
       try {
         // Fetch product reviews and all reviewers simultaneously to map reputation scores
+        const targetId = product.universal_product_id || product.product_id;
         const [revRes, usersRes] = await Promise.all([
-          fetch(`/api/v1/reviews/product/${product.product_id}`),
+          fetch(`/api/v1/reviews/product/${targetId}`),
           fetch(`/api/v1/reviewers`)
         ]);
 
@@ -37,18 +38,7 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
       }
     };
     loadData();
-  }, [product.product_id]);
-
-  const riskScore = Math.round((product.avg_ai_score || 0) * 100);
-  let riskColor = "text-amber-400";
-  let riskText = "Inconclusive";
-  if (riskScore < 30) {
-    riskColor = "text-emerald-400";
-    riskText = "Verified Authentic";
-  } else if (riskScore > 80) {
-    riskColor = "text-rose-400";
-    riskText = "High Fraud Risk";
-  }
+  }, [product.product_id, product.universal_product_id]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 animate-fadeIn">
@@ -82,9 +72,21 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
             <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
               {product.name || `Product ${product.product_id}`}
             </h2>
-            <p className="text-sm text-slate-400 font-mono mt-1">
-              Universal Keccak ID: <strong className="text-slate-300">{product.universal_product_id}</strong>
-            </p>
+            <div className="flex items-center gap-2 mt-1 font-mono text-sm">
+              <span className="text-slate-400">Universal Keccak ID:</span>
+              <strong className="text-slate-200 select-all">{product.universal_product_id}</strong>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(product.universal_product_id);
+                }}
+                title="Copy full Universal Keccak ID"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-cyan-400 transition-colors text-xs"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy</span>
+              </button>
+            </div>
           </div>
 
           {/* Stats Badges */}
@@ -95,12 +97,6 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
                 <Star className="w-5 h-5 fill-amber-400" />
                 <span>{product.avg_rating.toFixed(1)}</span>
               </div>
-            </div>
-            <div className="text-center px-4 border-r border-slate-800">
-              <span className="text-xs text-slate-400 block mb-1">AI Fraud Risk</span>
-              <span className={`font-extrabold text-2xl ${riskColor}`}>
-                {riskScore}% <span className="text-[10px] font-normal block uppercase tracking-wider">{riskText}</span>
-              </span>
             </div>
             <div className="text-center px-4">
               <span className="text-xs text-slate-400 block mb-1">Total Reviews</span>
@@ -176,12 +172,12 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
                       
                       {/* Reviewer Profile Link */}
                       <button
-                        onClick={() => onSelectReviewer(reviewerInfo.reviewer_id || rev.reviewer_id)}
+                        onClick={() => onSelectReviewer(rev.reviewer_id || reviewerInfo.universal_reviewer_id)}
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 hover:bg-slate-700 border border-slate-600/80 text-white text-xs font-semibold transition-all group"
                       >
                         <User className="w-3.5 h-3.5 text-cyan-400" />
                         <span className="group-hover:text-cyan-300 underline decoration-cyan-500/50">
-                          {rev.reviewer_name || `Reviewer ${rev.reviewer_id}`}
+                          {rev.reviewer_name || reviewerInfo.name || (rev.reviewer_id.startsWith("0x") ? `${rev.reviewer_id.slice(0, 14)}...` : rev.reviewer_id)}
                         </span>
                         <span className="bg-slate-900 px-1.5 py-0.5 rounded text-[10px] text-cyan-400 font-mono">
                           Rep: {authorRep}/100
@@ -215,21 +211,45 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
 
                     {/* Cryptographic Badges Row */}
                     <div className="flex items-center flex-wrap gap-2 pt-2">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-mono text-slate-400">
-                        <Hash className="w-3 h-3 text-slate-500" />
-                        <span>ID: {rev.universal_review_id.slice(0, 16)}...</span>
-                      </span>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-mono text-slate-300">
+                        <Hash className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                        <span className="text-slate-500">ID:</span>
+                        <span className="select-all text-slate-200 font-semibold">{rev.universal_review_id}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(rev.universal_review_id);
+                          }}
+                          title="Copy full Universal Keccak ID"
+                          className="ml-1 p-0.5 hover:bg-slate-800 rounded text-slate-400 hover:text-cyan-400 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
 
                       {/* Web3 Receipt Hash Badge */}
                       {rev.tx_hash ? (
-                        <button
-                          onClick={() => setSelectedTx(rev)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 text-[11px] font-mono text-cyan-300 transition-all shadow-sm group"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Alastria Red T Tx: {rev.tx_hash.slice(0, 18)}...</span>
-                          <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                        </button>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-[11px] font-mono text-cyan-300 shadow-sm">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                          <button
+                            onClick={() => setSelectedTx(rev)}
+                            className="hover:underline flex items-center gap-1 text-left"
+                            title="Inspect Alastria Audit Receipt"
+                          >
+                            <span>Alastria Red T Tx: {rev.tx_hash}</span>
+                            <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(rev.tx_hash);
+                            }}
+                            title="Copy full Tx Hash"
+                            className="ml-1 p-0.5 hover:bg-cyan-900 rounded text-cyan-400 hover:text-white transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-800/50 text-[11px] font-mono text-amber-400">
                           <span>Pending Alastria Anchor</span>
