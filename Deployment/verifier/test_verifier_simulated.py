@@ -43,7 +43,7 @@ def compile_contract():
         # Fallback to web3_worker/contracts
         contract_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web3_worker", "contracts", "ReputationLedger.sol"))
         
-    print(f"📦 Compiling contract from: {contract_path}")
+    print(f"Compiling contract from: {contract_path}")
     with open(contract_path, 'r', encoding='utf-8') as f:
         source_code = f.read()
         
@@ -57,7 +57,7 @@ def compile_contract():
 
 def run_simulated_verifier_test():
     print("=" * 80)
-    print(" 🚀 STARTING SIMULATED HARDHAT/ETHEREUM PUBLIC VERIFIER E2E TEST")
+    print("STARTING SIMULATED HARDHAT/ETHEREUM PUBLIC VERIFIER E2E TEST")
     print("=" * 80)
     
     # 1. Start Simulated Ethereum Provider
@@ -66,22 +66,22 @@ def run_simulated_verifier_test():
     
     deployer = w3.eth.accounts[0]
     w3.eth.default_account = deployer
-    print(f" ✅ Connected to Simulated Blockchain (Deployer: {deployer})")
+    print(f"Connected to Simulated Blockchain (Deployer: {deployer})")
     
     # 2. Compile & Deploy Contract
     abi, bytecode = compile_contract()
     ContractCls = w3.eth.contract(abi=abi, bytecode=bytecode)
     
-    print(" 🔨 Deploying ReputationLedger smart contract...")
+    print("Deploying ReputationLedger smart contract...")
     tx_hash = ContractCls.constructor().transact({'from': deployer})
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     contract_address = receipt.contractAddress
-    print(f" ✅ Contract Deployed at Address: {contract_address}")
+    print(f"Contract Deployed at Address: {contract_address}")
     
     contract = w3.eth.contract(address=contract_address, abi=abi)
     
     # 3. Anchor Sample Batch Data (Simulating Alastria Worker)
-    print("\n 📝 Broadcasting Zero-Gas Batch TX to anchor 3 sample reviews...")
+    print("\n  Broadcasting Zero-Gas Batch TX to anchor 3 sample reviews...")
     review_ids = [
         get_keccak_bytes16("AMAZON_US:R_1001"),
         get_keccak_bytes16("AMAZON_US:R_1002"),
@@ -101,14 +101,14 @@ def run_simulated_verifier_test():
     
     batch_receipt = w3.eth.wait_for_transaction_receipt(batch_tx_hash)
     batch_tx_hex = batch_tx_hash.hex()
-    print(f" ✅ Batch Anchored Successfully! TxHash: {batch_tx_hex} | Gas Used: {batch_receipt.gasUsed:,}")
+    print(f"Batch Anchored Successfully! TxHash: {batch_tx_hex} | Gas Used: {batch_receipt.gasUsed:,}")
     
     # =========================================================================
     # 4. EXECUTE TRUSTLESS VERIFICATION CLI MODES
     # =========================================================================
     
     print("\n" + "=" * 80)
-    print(" 🔍 RUNNING PUBLIC VERIFIER CLI TEST SUITE")
+    print("RUNNING PUBLIC VERIFIER CLI TEST SUITE")
     print("=" * 80)
     
     # Test Mode 1: Review ID Verification
@@ -123,7 +123,7 @@ def run_simulated_verifier_test():
     # Test Mode 4: Transaction Receipt & Event Log Verification
     verify_tx_hash(w3, contract, batch_tx_hex)
     
-    print("\n🎉 ALL 4 TRUSTLESS VERIFICATION MODES EXECUTED AND PASSED PERFECTLY!")
+    print("\n ALL 4 TRUSTLESS VERIFICATION MODES EXECUTED AND PASSED PERFECTLY!")
 
 if __name__ == "__main__":
     run_simulated_verifier_test()

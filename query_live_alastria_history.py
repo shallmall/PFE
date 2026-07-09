@@ -57,15 +57,15 @@ MINIMAL_ABI = [
 
 def main():
     print("═" * 70)
-    print("  QUERYING LIVE ALASTRIA BLOCKCHAIN FOR ENTITY REPUTATION")
-    print(f"  Node URL : {RPC_URL}")
-    print(f"  Contract : {CONTRACT_ADDRESS}")
+    print("QUERYING LIVE ALASTRIA BLOCKCHAIN FOR ENTITY REPUTATION")
+    print(f"Node URL : {RPC_URL}")
+    print(f"Contract : {CONTRACT_ADDRESS}")
     print("═" * 70)
 
     # Connect to Alastria Node
     w3 = Web3(Web3.HTTPProvider(RPC_URL))
     if not w3.is_connected():
-        print("❌ Could not connect to Alastria node.")
+        print("Could not connect to Alastria node.")
         return
 
     contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=MINIMAL_ABI)
@@ -88,8 +88,8 @@ def main():
     _, timestamp_latest, _, score_latest = latest_record
     readable_time_latest = datetime.datetime.fromtimestamp(timestamp_latest, datetime.UTC).strftime('%Y-%m-%d %H:%M:%S UTC')
 
-    print(f"✅ Latest Sealed AI Score : {score_latest} / 100")
-    print(f"✅ Last Updated On-Chain  : {readable_time_latest}")
+    print(f"Latest Sealed AI Score : {score_latest} / 100")
+    print(f"Last Updated On-Chain  : {readable_time_latest}")
 
     # ─────────────────────────────────────────────────────────────────────────
     # REQUEST 2: READ ENTIRE CHRONOLOGICAL EVOLUTION TRAIL
@@ -97,7 +97,7 @@ def main():
     print("\n── REQUEST 2: Querying Entire Chronological History (getEntityHistory) ──")
     history_records = contract.functions.getEntityHistory(target_entity_bytes, entity_bit).call()
 
-    print(f"✅ Found {len(history_records)} historical evaluations permanently recorded on Alastria:\n")
+    print(f"Found {len(history_records)} historical evaluations permanently recorded on Alastria:\n")
     
     for idx, rec in enumerate(history_records, 1):
         _, timestamp_hist, _, score_hist = rec
@@ -105,7 +105,7 @@ def main():
         
         # Explain progression
         status = "Initial Evaluation" if idx == 1 else "Reputation Adjustment"
-        print(f"   [{idx}] {status:<22} -> Score: {score_hist:<3} / 100 | Timestamp: {readable_time_hist}")
+        print(f"[{idx}] {status:<22} -> Score: {score_hist:<3} / 100 | Timestamp: {readable_time_hist}")
 
     print("\n" + "═" * 70)
 

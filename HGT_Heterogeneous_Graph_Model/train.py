@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn as nn
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, precision_recall_curve, auc
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import numpy as np
 import copy
 from model import HGTModel
@@ -44,11 +44,8 @@ def find_best_threshold(y_true, y_pred_prob):
 def calculate_metrics(y_true, y_pred_prob, threshold=0.5):
     if len(np.unique(y_true)) > 1:
         roc_auc = roc_auc_score(y_true, y_pred_prob)
-        precision_curve, recall_curve, _ = precision_recall_curve(y_true, y_pred_prob)
-        pr_auc = auc(recall_curve, precision_curve)
     else:
         roc_auc = float('nan')
-        pr_auc = float('nan')
         
     y_pred = (y_pred_prob >= threshold).astype(int)
     acc = accuracy_score(y_true, y_pred)
@@ -61,14 +58,14 @@ def calculate_metrics(y_true, y_pred_prob, threshold=0.5):
     f1_mac = f1_score(y_true, y_pred, average='macro', zero_division=0)
     
     return {
-        'acc': acc, 'roc_auc': roc_auc, 'pr_auc': pr_auc, 'f1_macro': f1_mac,
+        'acc': acc, 'roc_auc': roc_auc, 'f1_macro': f1_mac,
         'prec_fake': prec_fake, 'rec_fake': rec_fake, 'f1_fake': f1_fake,
         'prec_real': prec_real, 'rec_real': rec_real, 'f1_real': f1_real
     }
 
 def print_metrics(metrics, title):
     print(f"--- {title} ---")
-    print(f"Accuracy: {metrics['acc']:.4f} | ROC-AUC: {metrics['roc_auc']:.4f} | PR-AUC: {metrics['pr_auc']:.4f} | F1-Macro: {metrics['f1_macro']:.4f}")
+    print(f"Accuracy: {metrics['acc']:.4f} | ROC-AUC: {metrics['roc_auc']:.4f} | F1-Macro: {metrics['f1_macro']:.4f}")
     print(f"  [Real/0] Precision: {metrics['prec_real']:.4f} | Recall: {metrics['rec_real']:.4f} | F1: {metrics['f1_real']:.4f}")
     print(f"  [Fake/1] Precision: {metrics['prec_fake']:.4f} | Recall: {metrics['rec_fake']:.4f} | F1: {metrics['f1_fake']:.4f}")
     print("-" * 40)
@@ -191,7 +188,7 @@ def train(graph_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspat
         val_metrics_r = calculate_metrics(np.array(all_y_r), np.array(all_prob_r))
         val_metrics_rev = calculate_metrics(np.array(all_y_rev), np.array(all_prob_rev))
         
-        print(f"Epoch {epoch:03d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val PR-AUC (Rev): {val_metrics_r['pr_auc']:.4f} | Val PR-AUC (Review): {val_metrics_rev['pr_auc']:.4f}", flush=True)
+        print(f"Epoch {epoch:03d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val ROC-AUC (Rev): {val_metrics_r['roc_auc']:.4f} | Val ROC-AUC (Review): {val_metrics_rev['roc_auc']:.4f}", flush=True)
         
         if avg_val_loss < best_val_loss - min_delta:
             best_val_loss = avg_val_loss
@@ -252,8 +249,12 @@ def train(graph_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspat
     best_thresh_rev = find_best_threshold(np.array(all_y_rev_val), np.array(all_prob_rev_val))
     
     print(f"Optimal Accuracy Thresholds (Tuned on Val) -> Reviewer: {best_thresh_r:.2f}, Review: {best_thresh_rev:.2f}\n")
+    model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model")
+    os.makedirs(model_save_dir, exist_ok=True)
+    with open(os.path.join(model_save_dir, "best_thresholds.json"), 'w') as f:
+        json.dump({'reviewer_threshold': float(best_thresh_r), 'review_threshold': float(best_thresh_rev)}, f, indent=4)
     with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/best_thresholds.json"), 'w') as f:
-        json.dump({'reviewer_threshold': float(best_thresh_r), 'review_threshold': float(best_thresh_rev)}, f)
+        json.dump({'reviewer_threshold': float(best_thresh_r), 'review_threshold': float(best_thresh_rev)}, f, indent=4)
         
     metrics_r_test = calculate_metrics(np.array(all_y_r_test), np.array(all_prob_r_test), threshold=best_thresh_r)
     metrics_rev_test = calculate_metrics(np.array(all_y_rev_test), np.array(all_prob_rev_test), threshold=best_thresh_rev)
@@ -271,10 +272,8 @@ def train(graph_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspat
         json.dump(metrics_export, f, indent=4)
     with open(metrics_path_local, 'w') as f:
         json.dump(metrics_export, f, indent=4)
-    print(f"\nMetrics successfully saved to data/hgt_model_metrics.json and HGT_Model/hgt_model_metrics.json")
+    print(f"\nMetrics successfully saved to data/hgt_model_metrics.json and HGT_Heterogeneous_Graph_Model/hgt_model_metrics.json")
     
-    model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model")
-    os.makedirs(model_save_dir, exist_ok=True)
     model_save_path = os.path.join(model_save_dir, "best_model.pth")
     torch.save(best_model_weights, model_save_path)
     print(f"Best model weights saved to {model_save_path}")

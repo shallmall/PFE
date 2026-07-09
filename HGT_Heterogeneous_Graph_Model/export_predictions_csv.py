@@ -40,10 +40,13 @@ def main():
     model.load_state_dict(torch.load(model_path))
     model.eval()
     
-    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/best_thresholds.json"), 'r') as f:
+    thresh_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model/best_thresholds.json")
+    if not os.path.exists(thresh_path):
+        thresh_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/best_thresholds.json")
+    with open(thresh_path, 'r') as f:
         thresh = json.load(f)
     thresh_r = thresh['reviewer_threshold']
-    thresh_rev = thresh.get('review_threshold', 0.5)
+    thresh_rev = thresh['review_threshold']
     
     print("Computing GNN inference across all graph nodes using strict time-aware sampling...")
     loader_r = NeighborLoader(data, num_neighbors=[10, 10], input_nodes='reviewer', time_attr='max_time', batch_size=2048, shuffle=False, num_workers=2)

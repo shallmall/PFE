@@ -25,7 +25,7 @@ try:
     from database.db import SessionLocal, engine, Base
     from database.models import Review, Reviewer, Product, Submitter
 except ImportError as e:
-    print(f"❌ Missing import: {e}")
+    print(f"Missing import: {e}")
     print("Please run: uv pip install py-solc-x web3 eth-account sqlalchemy")
     sys.exit(1)
 
@@ -64,30 +64,30 @@ def scale_score_uint8(score: float) -> int:
 def connect_web3(simulated: bool = False) -> Tuple[Web3, str]:
     """Connects to Alastria live nodes or simulated local provider."""
     if simulated:
-        print("⚡ Connecting to Simulated Web3 EthereumTesterProvider...")
+        print("Connecting to Simulated Web3 EthereumTesterProvider...")
         try:
             from web3.providers.eth_tester import EthereumTesterProvider
             w3 = Web3(EthereumTesterProvider())
             return w3, "Simulated-EthTester"
         except Exception as e:
-            print(f"⚠️ Could not start EthereumTesterProvider: {e}")
+            print(f"Could not start EthereumTesterProvider: {e}")
             print("Falling back to local HTTP provider http://127.0.0.1:8545...")
             w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
             return w3, "Local-8545"
 
     for rpc_url in ALASTRIA_ENDPOINTS:
-        print(f"🌐 Attempting connection to Alastria Red T node: {rpc_url}...")
+        print(f"Attempting connection to Alastria Red T node: {rpc_url}...")
         try:
             w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={'timeout': 8}))
             if w3.is_connected():
                 chain_id = w3.eth.chain_id
                 block_num = w3.eth.block_number
-                print(f"✅ Connected to {rpc_url}! | Chain ID: {chain_id} | Live Block: {block_num:,}")
+                print(f"Connected to {rpc_url}! | Chain ID: {chain_id} | Live Block: {block_num:,}")
                 return w3, rpc_url
         except Exception as e:
-            print(f"⚠️ Could not connect to {rpc_url}: {e}")
+            print(f"Could not connect to {rpc_url}: {e}")
     
-    print("\n❌ All Alastria live nodes unreachable! Falling back to simulated EthereumTesterProvider...")
+    print("\n All Alastria live nodes unreachable! Falling back to simulated EthereumTesterProvider...")
     from web3.providers.eth_tester import EthereumTesterProvider
     w3 = Web3(EthereumTesterProvider())
     return w3, "Simulated-EthTester-Fallback"
@@ -112,10 +112,10 @@ def load_or_compile_contract(w3: Web3, deployer_account, contract_address: str =
     bytecode = contract_interface["bin"]
 
     if contract_address and w3.is_address(contract_address):
-        print(f"📄 Using existing contract at address: {contract_address}")
+        print(f"Using existing contract at address: {contract_address}")
         return w3.eth.contract(address=contract_address, abi=abi)
 
-    print("🚀 Deploying ReputationLedger contract with gasPrice = 0...")
+    print("Deploying ReputationLedger contract with gasPrice = 0...")
     contract_cls = w3.eth.contract(abi=abi, bytecode=bytecode)
     
     # Handle simulated vs live deploy
@@ -133,10 +133,10 @@ def load_or_compile_contract(w3: Web3, deployer_account, contract_address: str =
         signed_deploy = w3.eth.account.sign_transaction(deploy_tx, private_key=deployer_account.key)
         tx_hash = w3.eth.send_raw_transaction(signed_deploy.raw_transaction)
 
-    print(f"   ⏳ Broadcasted deploy TX: {tx_hash.hex()}. Waiting for mining confirmation...")
+    print(f"⏳ Broadcasted deploy TX: {tx_hash.hex()}. Waiting for mining confirmation...")
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     address = receipt.contractAddress
-    print(f"   🎉 CONTRACT MINED! Address: {address} | Gas Used: {receipt.gasUsed:,}")
+    print(f"CONTRACT MINED! Address: {address} | Gas Used: {receipt.gasUsed:,}")
     return w3.eth.contract(address=address, abi=abi)
 
 def sync_pending_reviews(db: Session, w3: Web3, contract, account, batch_limit: int = 100) -> int:
@@ -154,7 +154,7 @@ def sync_pending_reviews(db: Session, w3: Web3, contract, account, batch_limit: 
     if not pending:
         return 0
 
-    print(f"\n📦 Found {len(pending)} un-anchored reviews in database! Preparing Web3 batch transaction...")
+    print(f"\n Found {len(pending)} un-anchored reviews in database! Preparing Web3 batch transaction...")
 
     review_ids_16 = []
     reviewer_ids_16 = []
@@ -200,26 +200,26 @@ def sync_pending_reviews(db: Session, w3: Web3, contract, account, batch_limit: 
         if not hex_hash.startswith("0x"):
             hex_hash = "0x" + hex_hash
 
-        print(f"   ⏳ Broadcasted saveReviewBatch ({len(pending)} items) -> Hash: {hex_hash}")
-        print("   ⏳ Waiting for block mining receipt...")
+        print(f"⏳ Broadcasted saveReviewBatch ({len(pending)} items) -> Hash: {hex_hash}")
+        print("⏳ Waiting for block mining receipt...")
         
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
         gas_used = receipt.get('gasUsed', 0)
         block_num = receipt.get('blockNumber', 0)
-        print(f"   ✅ TRANSACTION MINED IN BLOCK #{block_num:,}! Gas used: {gas_used:,}")
+        print(f"TRANSACTION MINED IN BLOCK #{block_num:,}! Gas used: {gas_used:,}")
 
         # CRITICAL USER REQUIREMENT: Complete the write on local DB ONLY AFTER receipt is received!
-        print("   💾 Updating SQL database records to 'Confirmed_OnChain' with immutable receipt hash...")
+        print("Updating SQL database records to 'Confirmed_OnChain' with immutable receipt hash...")
         for r in pending:
             r.status = "Confirmed_OnChain"
             r.tx_hash = hex_hash
         db.commit()
-        print(f"   🎉 Successfully synced {len(pending)} records to blockchain and local DB!")
+        print(f"Successfully synced {len(pending)} records to blockchain and local DB!")
         return len(pending)
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Error during Web3 transaction broadcast/receipt: {e}")
+        print(f"Error during Web3 transaction broadcast/receipt: {e}")
         return 0
 
 def run_worker_loop(simulated: bool = False, once: bool = False, batch_threshold: int = 50, timer_seconds: int = 600):
@@ -228,7 +228,7 @@ def run_worker_loop(simulated: bool = False, once: bool = False, batch_threshold
     Triggers whenever EITHER 50 reviews accumulate OR 10 minutes (600s) elapse with >= 1 review waiting.
     """
     print("═" * 70)
-    print("  LAYER 4: ALASTRIA ZERO-GAS EVM BLOCKCHAIN SYNC WORKER")
+    print("LAYER 4: ALASTRIA ZERO-GAS EVM BLOCKCHAIN SYNC WORKER")
     print("═" * 70)
 
     w3, endpoint_name = connect_web3(simulated=simulated)
@@ -248,7 +248,7 @@ def run_worker_loop(simulated: bool = False, once: bool = False, batch_threshold
             account = Account.from_key(private_key_env)
         else:
             account = Account.create()
-            print(f"🔑 Created new Autonomous Deployer Account: {account.address}")
+            print(f"Created new Autonomous Deployer Account: {account.address}")
 
     contract_addr = os.getenv("CONTRACT_ADDRESS")
     contract = load_or_compile_contract(w3, account, contract_address=contract_addr)
@@ -257,16 +257,16 @@ def run_worker_loop(simulated: bool = False, once: bool = False, batch_threshold
     last_timer_sync = time.time()
 
     if once:
-        print("\n▶️ Running single immediate sync sweep (--once mode)...")
+        print("\n▶ Running single immediate sync sweep (--once mode)...")
         synced = sync_pending_reviews(db, w3, contract, account, batch_limit=batch_threshold)
-        print(f"🏁 Single sweep complete. Synced: {synced} records.")
+        print(f"Single sweep complete. Synced: {synced} records.")
         db.close()
         return
 
-    print(f"\n⚙️ Worker Daemon started! Monitoring database via Dual Trigger Strategy:")
-    print(f"   • Volume Trigger : {batch_threshold} reviews")
-    print(f"   • Timer Trigger  : {timer_seconds // 60} minutes ({timer_seconds}s)")
-    print("   Press Ctrl+C to stop.")
+    print(f"\n Worker Daemon started! Monitoring database via Dual Trigger Strategy:")
+    print(f"• Volume Trigger : {batch_threshold} reviews")
+    print(f"• Timer Trigger  : {timer_seconds // 60} minutes ({timer_seconds}s)")
+    print("Press Ctrl+C to stop.")
 
     try:
         while True:
@@ -283,7 +283,7 @@ def run_worker_loop(simulated: bool = False, once: bool = False, batch_threshold
 
                 # Check Condition 1: Volume Trigger
                 if pending_count >= batch_threshold:
-                    print(f"\n🔔 [VOLUME TRIGGER] Reached threshold ({pending_count} >= {batch_threshold})!")
+                    print(f"\n [VOLUME TRIGGER] Reached threshold ({pending_count} >= {batch_threshold})!")
                     sync_pending_reviews(db, w3, contract, account, batch_limit=batch_threshold)
                     last_timer_sync = time.time()
 
@@ -298,12 +298,12 @@ def run_worker_loop(simulated: bool = False, once: bool = False, batch_threshold
                     last_timer_sync = time.time()
 
             except Exception as e:
-                print(f"⚠️ Worker loop error: {e}")
+                print(f"Worker loop error: {e}")
                 db.rollback()
 
             time.sleep(5.0) # Check database queue every 5 seconds
     except KeyboardInterrupt:
-        print("\n🛑 Worker daemon stopped by user.")
+        print("\n Worker daemon stopped by user.")
     finally:
         db.close()
 

@@ -97,41 +97,46 @@ def main():
     # Auto-load threshold from best_threshold.json if present
     thresh_file = script_dir / "best_threshold.json"
     if thresh_file.exists():
-        try:
-            import json
-            with open(thresh_file, "r") as f:
-                t_data = json.load(f)
-                if "threshold" in t_data:
-                    args.threshold = float(t_data["threshold"])
-        except Exception:
-            pass
+        import json
+        with open(thresh_file, "r") as f:
+            t_data = json.load(f)
+        if "best_threshold" in t_data:
+            args.threshold = float(t_data["best_threshold"])
+            print(f"[OK] Loaded exact validation threshold from {thresh_file}: {args.threshold:.4f}")
+        elif "threshold" in t_data:
+            args.threshold = float(t_data["threshold"])
+            print(f"[OK] Loaded exact validation threshold from {thresh_file}: {args.threshold:.4f}")
+        else:
+            raise RuntimeError(f"Error: valid threshold key ('best_threshold' or 'threshold') not found in {thresh_file}. Never use default threshold!")
+    else:
+        raise RuntimeError(f"Error: exact threshold JSON file not found at {thresh_file}. Never use default threshold!")
 
     print("═" * 70)
-    print("  SpamVis DeBERTa Pipeline: CSV Cleaning & Model Inference")
+    print("SpamVis DeBERTa Pipeline: CSV Cleaning & Model Inference")
     print("═" * 70)
 
     # 1. Verify paths
     if not os.path.exists(args.csv_path):
-        print(f"❌ Error: Input CSV file not found at: {args.csv_path}")
+        print(f"Error: Input CSV file not found at: {args.csv_path}")
         print("Please specify a valid path using --csv_path <path_to_csv>")
         sys.exit(1)
 
     if not os.path.exists(args.model_dir):
-        print(f"❌ Error: DeBERTa model directory not found at: {args.model_dir}")
+        print(f"Error: DeBERTa model directory not found at: {args.model_dir}")
         sys.exit(1)
 
     # Setup device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"🔹 Using Device      : {device.type.upper()}" + (f" ({torch.cuda.get_device_name(0)})" if device.type == "cuda" else ""))
-    print(f"🔹 Model Directory   : {args.model_dir}")
-    print(f"🔹 Input CSV         : {args.csv_path}")
-    print(f"🔹 Max Token Length  : {args.max_length}")
+    print(f"Using Device      : {device.type.upper()}" + (f" ({torch.cuda.get_device_name(0)})" if device.type == "cuda" else ""))
+    print(f"Model Directory   : {args.model_dir}")
+    print(f"Input CSV         : {args.csv_path}")
+    print(f"Max Token Length  : {args.max_length}")
 
     # 2. Load CSV Data
     print("\n── 1. Loading & Cleaning CSV Data ─────────────────────────────────")
     t0 = time.time()
     df = pd.read_csv(args.csv_path, nrows=args.limit, low_memory=False)
-    print(f"✅ Loaded {len(df):,} rows in {time.time() - t0:.2f}s")
+    print(f"Loaded {len(df):,} rows in {time.time() - t0:.2f}s")
 
     # Auto-detect text column
     text_col = args.text_col
@@ -142,14 +147,14 @@ def main():
                 break
     
     if not text_col or text_col not in df.columns:
-        print(f"❌ Error: Could not find review text column in CSV. Available columns: {list(df.columns)}")
+        print(f"Error: Could not find review text column in CSV. Available columns: {list(df.columns)}")
         print("Please specify the exact column name using --text_col <column_name>")
         sys.exit(1)
 
-    print(f"🔹 Using text column : '{text_col}'")
+    print(f"Using text column : '{text_col}'")
 
     # Apply Advanced DeBERTa Text Cleaning
-    print("🔹 Applying advanced DeBERTa cleaning (URL masking, control chars)...")
+    print("Applying advanced DeBERTa cleaning (URL masking, control chars)...")
     cleaned_texts = [clean_deberta_text(t) for t in df[text_col]]
     
     # Show sample before and after
@@ -158,8 +163,8 @@ def main():
         sample_idx += 1
     if sample_idx < len(cleaned_texts):
         print("\n   [Sample Text]")
-        print(f"   Original : {str(df[text_col].iloc[sample_idx])[:80]}...")
-        print(f"   Input    : {cleaned_texts[sample_idx][:80]}...")
+        print(f"Original : {str(df[text_col].iloc[sample_idx])[:80]}...")
+        print(f"Input    : {cleaned_texts[sample_idx][:80]}...")
 
     # 3. Load Model & Tokenizer
     print("\n── 2. Loading Fine-Tuned DeBERTa Model & Tokenizer ───────────────────")
@@ -168,7 +173,7 @@ def main():
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir, local_files_only=True)
     model = model.to(device)
     model.eval()
-    print(f"✅ Loaded weights in {time.time() - t0:.2f}s")
+    print(f"Loaded weights in {time.time() - t0:.2f}s")
 
     # 4. Run Inference
     print("\n── 3. Running DeBERTa Inference ──────────────────────────────────────")
@@ -200,10 +205,10 @@ def main():
 
             if (batch_idx + 1) % max(1, len(dataloader) // 10) == 0 or (batch_idx + 1) == len(dataloader):
                 processed = min((batch_idx + 1) * args.batch_size, len(df))
-                print(f"   Processed {processed:,} / {len(df):,} reviews ({processed/len(df)*100:.1f}%)")
+                print(f"Processed {processed:,} / {len(df):,} reviews ({processed/len(df)*100:.1f}%)")
 
     elapsed = time.time() - t0
-    print(f"✅ Inference completed in {elapsed:.2f}s ({len(df)/elapsed:.1f} reviews/sec)")
+    print(f"Inference completed in {elapsed:.2f}s ({len(df)/elapsed:.1f} reviews/sec)")
 
     # 5. Append predictions and save
     print("\n── 4. Saving Predictions ──────────────────────────────────────────")
@@ -222,15 +227,15 @@ def main():
     })
 
     output_df.to_csv(args.output_csv, index=False)
-    print(f"✅ Saved binary results (0/1) to: {args.output_csv}")
+    print(f"Saved binary results (0/1) to: {args.output_csv}")
 
     # Summary Statistics
     spam_count = (binary_labels == 0).sum()
     genuine_count = len(df) - spam_count
     print("\n── Prediction Summary ──")
-    print(f"   Total Reviews Predicted   : {len(df):,}")
-    print(f"   Classified as Genuine (1) : {genuine_count:,} ({genuine_count/len(df)*100:.1f}%)")
-    print(f"   Classified as Spam (0)    : {spam_count:,} ({spam_count/len(df)*100:.1f}%)")
+    print(f"Total Reviews Predicted   : {len(df):,}")
+    print(f"Classified as Genuine (1) : {genuine_count:,} ({genuine_count/len(df)*100:.1f}%)")
+    print(f"Classified as Spam (0)    : {spam_count:,} ({spam_count/len(df)*100:.1f}%)")
     print("═" * 70)
 
 

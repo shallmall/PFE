@@ -1,4 +1,5 @@
 import os
+import json
 import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -40,12 +41,27 @@ class ModelLoader:
         self.nlp_model = LogisticRegression()
         self.nlp_model.fit(self.nlp_vectorizer.transform(sample_spam_vocab), sample_labels)
         
-        # 2. Load Real HGT Model weights path reference
-        self.hgt_model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../HGT_Model/model/best_model.pth"))
+        # 2. Load Real HGT Model weights path reference and exact validation thresholds
+        self.hgt_model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../HGT_Heterogeneous_Graph_Model/model/best_model.pth"))
+        if not os.path.exists(self.hgt_model_path):
+            self.hgt_model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/best_model.pth"))
+            
         if os.path.exists(self.hgt_model_path):
             print(f"[OK] Located verified HGT GNN model weights at: {self.hgt_model_path}")
         else:
             print(f"[WARN] HGT GNN model weights not found at {self.hgt_model_path}, using localized heuristic subgraph attention.")
+
+        thresh_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../HGT_Heterogeneous_Graph_Model/model/best_thresholds.json"))
+        if not os.path.exists(thresh_path):
+            thresh_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/best_thresholds.json"))
+        if os.path.exists(thresh_path):
+            with open(thresh_path, 'r') as f:
+                thresh_data = json.load(f)
+            self.reviewer_threshold = float(thresh_data['reviewer_threshold'])
+            self.review_threshold = float(thresh_data['review_threshold'])
+            print(f"[OK] Loaded exact validation thresholds from {thresh_path} -> Reviewer: {self.reviewer_threshold:.4f}, Review: {self.review_threshold:.4f}")
+        else:
+            raise RuntimeError(f"Error: exact threshold JSON file not found at {thresh_path}. Never use default 0.5 threshold!")
 
         # 3. Load Real Late Fusion Models (Best Performing Benchmark: LightGBM!)
         models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../late_Fusion_Score-Level_Integration/saved_models"))

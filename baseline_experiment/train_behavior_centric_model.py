@@ -13,7 +13,7 @@ import json
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_auc_score, f1_score, accuracy_score, precision_recall_curve, auc, precision_score, recall_score
+from sklearn.metrics import roc_auc_score, f1_score, accuracy_score, precision_score, recall_score
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -219,11 +219,8 @@ def main():
         if hasattr(model, "predict_proba"):
             y_prob = model.predict_proba(X_test_scaled)[:, 1]
             auc_val = roc_auc_score(y_test, y_prob)
-            precision, recall, _ = precision_recall_curve(y_test, y_prob)
-            pr_auc = auc(recall, precision)
         else:
             auc_val = 0.0
-            pr_auc = 0.0
             
         acc = accuracy_score(y_test, y_pred)
         f1_mac = f1_score(y_test, y_pred, average='macro')
@@ -240,13 +237,12 @@ def main():
         f_real = f1_score(y_test, y_pred, pos_label=0)
         
         time_taken = time.time() - t0
-        print(f"     [Done in {time_taken:.1f}s] AUC: {auc_val:.4f} | PR-AUC: {pr_auc:.4f} | Acc: {acc:.4f} | F1-Macro: {f1_mac:.4f}")
+        print(f"     [Done in {time_taken:.1f}s] AUC: {auc_val:.4f} | Acc: {acc:.4f} | F1-Macro: {f1_mac:.4f}")
         
         results.append({
             'Model': name,
             'Accuracy': acc,
             'ROC-AUC': auc_val,
-            'PR-AUC': pr_auc,
             'Precision-Macro': prec_mac,
             'Recall-Macro': rec_mac,
             'F1-Macro': f1_mac,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, ShieldAlert, ShieldCheck, User, Building2, Hash, ExternalLink, Calendar, CheckCircle2, Award, Terminal, Copy } from 'lucide-react';
+import { ArrowLeft, Star, ShieldAlert, ShieldCheck, User, Building2, Hash, ExternalLink, Calendar, CheckCircle2, Award, Terminal, Copy, X } from 'lucide-react';
 
 export default function ProductDetail({ product, onBack, onSelectReviewer }) {
   const [reviews, setReviews] = useState([]);
@@ -288,7 +288,7 @@ export default function ProductDetail({ product, onBack, onSelectReviewer }) {
               onClick={() => setSelectedTx(null)}
               className="absolute top-6 right-6 text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">

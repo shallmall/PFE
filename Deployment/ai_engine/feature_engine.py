@@ -50,9 +50,9 @@ def compute_late_fusion_scores(batch: ReviewBatchInput, hgt_scores: Dict[str, fl
         reviewer_score = model_loader.predict_late_fusion_reviewer(hgt_score, deberta_prob, user_avg_past_deberta_score)
         review_score = model_loader.predict_late_fusion_review(deberta_prob, hgt_score)
         
-        # Primary Transaction Score
+        # Primary Transaction Score using exact JSON validation threshold
         ai_score = round(float(review_score), 4)
-        is_fraud = 1 if ai_score >= 0.50 else 0
+        is_fraud = 1 if ai_score >= getattr(model_loader, 'review_threshold', 0.47) else 0
         
         # Update rolling state for subsequent reviews by same author in this batch!
         reviewer_deberta_sums[univ_rev_id] = reviewer_deberta_sums.get(univ_rev_id, 0.0) + deberta_prob

@@ -7,7 +7,7 @@ import pandas as pd
 import warnings
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, precision_recall_curve, auc
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import lightgbm as lgb
 
 # Import feature extraction functions from sibling baseline scripts
@@ -25,11 +25,8 @@ warnings.filterwarnings('ignore')
 def calculate_metrics(y_true, y_pred_prob, threshold=0.5, pos_label_fake=1):
     if len(np.unique(y_true)) > 1:
         roc_auc = roc_auc_score(y_true, y_pred_prob)
-        precision_curve, recall_curve, _ = precision_recall_curve(y_true, y_pred_prob)
-        pr_auc = auc(recall_curve, precision_curve)
     else:
         roc_auc = 0.0
-        pr_auc = 0.0
         
     y_pred = (y_pred_prob >= threshold).astype(int)
     acc = accuracy_score(y_true, y_pred)
@@ -47,7 +44,7 @@ def calculate_metrics(y_true, y_pred_prob, threshold=0.5, pos_label_fake=1):
     f_real = f1_score(y_true, y_pred, pos_label=real_label, zero_division=0)
     
     return {
-        'acc': acc, 'roc_auc': roc_auc, 'pr_auc': pr_auc, 'f1_macro': f1_mac,
+        'acc': acc, 'roc_auc': roc_auc, 'f1_macro': f1_mac,
         'prec_fake': p_fake, 'rec_fake': r_fake, 'f1_fake': f_fake,
         'prec_real': p_real, 'rec_real': r_real, 'f1_real': f_real
     }
@@ -57,7 +54,7 @@ def print_metrics_box(metrics, title, x_val, y_val):
     print(f"║ {title:<76} ║")
     print(f"║ Optimal Blending Weights -> x (Text-Centric): {x_val:.2f} | y (Behavior-Centric): {y_val:.2f} ║")
     print("╠" + "═" * 78 + "╣")
-    print(f"║ Accuracy: {metrics['acc']:.4f} | ROC-AUC: {metrics['roc_auc']:.4f} | PR-AUC: {metrics['pr_auc']:.4f} | F1-Macro: {metrics['f1_macro']:.4f} ║")
+    print(f"║ Accuracy: {metrics['acc']:.4f} | ROC-AUC: {metrics['roc_auc']:.4f} | F1-Macro: {metrics['f1_macro']:.4f}                 ║")
     print(f"║   [Real/0] Precision: {metrics['prec_real']:.4f} | Recall: {metrics['rec_real']:.4f} | F1: {metrics['f1_real']:.4f}         ║")
     print(f"║   [Fake/1] Precision: {metrics['prec_fake']:.4f} | Recall: {metrics['rec_fake']:.4f} | F1: {metrics['f1_fake']:.4f}         ║")
     print("╚" + "═" * 78 + "╝")
@@ -88,7 +85,7 @@ def print_metrics_box_3var(metrics, title, w1, w2, w3):
     print(f"║ {title:<76} ║")
     print(f"║ Optimal Weights -> w1(Behavior): {w1:.2f} | w2(Curr Text): {w2:.2f} | w3(Hist Text): {w3:.2f} ║")
     print("╠" + "═" * 78 + "╣")
-    print(f"║ Accuracy: {metrics['acc']:.4f} | ROC-AUC: {metrics['roc_auc']:.4f} | PR-AUC: {metrics['pr_auc']:.4f} | F1-Macro: {metrics['f1_macro']:.4f} ║")
+    print(f"║ Accuracy: {metrics['acc']:.4f} | ROC-AUC: {metrics['roc_auc']:.4f} | F1-Macro: {metrics['f1_macro']:.4f}                 ║")
     print(f"║   [Real/0] Precision: {metrics['prec_real']:.4f} | Recall: {metrics['rec_real']:.4f} | F1: {metrics['f1_real']:.4f}         ║")
     print(f"║   [Fake/1] Precision: {metrics['prec_fake']:.4f} | Recall: {metrics['rec_fake']:.4f} | F1: {metrics['f1_fake']:.4f}         ║")
     print("╚" + "═" * 78 + "╝")
@@ -121,7 +118,7 @@ def find_best_linear_weights_3var(y_train, v1_train, v2_train, v3_train):
 
 def main():
     print("═" * 80)
-    print("  Baseline Linear Weighted Blending Ensemble (Text & Behavior Centric)")
+    print("Baseline Linear Weighted Blending Ensemble (Text & Behavior Centric)")
     print("═" * 80)
     
     data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "final_enriched_reviews_dataset.csv")
@@ -135,7 +132,7 @@ def main():
     t0 = time.time()
     df_reviewer = extract_rolling_reviewer_features(df_raw.copy())
     df_reviewer.fillna(0.0, inplace=True)
-    print(f"✅ Behavior-centric features extracted in {time.time() - t0:.2f}s | Shape: {df_reviewer.shape}")
+    print(f"Behavior-centric features extracted in {time.time() - t0:.2f}s | Shape: {df_reviewer.shape}")
     
     # Ensure consistent review_id ordering and filtering
     df_reviewer = df_reviewer.sort_values('review_id').reset_index(drop=True)
@@ -154,7 +151,7 @@ def main():
     ling_df, texts_for_ft = extract_linguistic_features(df_rev_raw)
     ft_df = get_fasttext_embeddings(texts_for_ft)
     X_rev = pd.concat([ling_df.reset_index(drop=True), ft_df.reset_index(drop=True)], axis=1)
-    print(f"✅ Text-centric features extracted in {time.time() - t0:.2f}s | Shape: {X_rev.shape}")
+    print(f"Text-centric features extracted in {time.time() - t0:.2f}s | Shape: {X_rev.shape}")
     
     # Align features exactly by row index
     X_reviewer = df_reviewer.drop(columns=['review_id', 'reviewer_id', 'tag'])
@@ -170,7 +167,7 @@ def main():
     idx_train, idx_test, y_train, y_test = train_test_split(
         indices, y_target, test_size=0.2, random_state=42, stratify=y_target
     )
-    print(f"✅ Split Sizes -> Train: {len(idx_train):,} reviews | Test: {len(idx_test):,} reviews")
+    print(f"Split Sizes -> Train: {len(idx_train):,} reviews | Test: {len(idx_test):,} reviews")
     
     # Scale both feature sets independently
     scaler_rev = StandardScaler()
@@ -187,13 +184,13 @@ def main():
     print("\n── 4. Training Top-Performing Baseline Models (LightGBM) ──────────────")
     scale_pos_weight_val = len(y_train[y_train==0]) / max(1, len(y_train[y_train==1]))
     
-    print("🔹 Training Text-Centric LightGBM...")
+    print("Training Text-Centric LightGBM...")
     model_rev = lgb.LGBMClassifier(scale_pos_weight=scale_pos_weight_val, random_state=42, n_jobs=-1)
     model_rev.fit(X_rev_train, y_train)
     prob_rev_train = model_rev.predict_proba(X_rev_train)[:, 1]
     prob_rev_test = model_rev.predict_proba(X_rev_test)[:, 1]
     
-    print("🔹 Training Behavior-Centric LightGBM...")
+    print("Training Behavior-Centric LightGBM...")
     model_reviewer = lgb.LGBMClassifier(scale_pos_weight=scale_pos_weight_val, random_state=42, n_jobs=-1)
     model_reviewer.fit(X_reviewer_train, y_train)
     prob_reviewer_train = model_reviewer.predict_proba(X_reviewer_train)[:, 1]
@@ -204,7 +201,7 @@ def main():
     # ---------------------------------------------------------
     print("\n── 5. Optimizing Linear Blending Weights on Train Data (Review Head) ──")
     x1, y1, best_thresh_1 = find_best_linear_weights(y_train, prob_rev_train, prob_reviewer_train)
-    print(f"✅ Optimal Review Head Weights -> x1 (Text-Centric): {x1:.2f} | y1 (Behavior-Centric): {y1:.2f} | Thresh: {best_thresh_1:.2f}")
+    print(f"Optimal Review Head Weights -> x1 (Text-Centric): {x1:.2f} | y1 (Behavior-Centric): {y1:.2f} | Thresh: {best_thresh_1:.2f}")
     
     print("Evaluating Review Head on Unseen Test Data...")
     blend_prob_test_review = x1 * prob_rev_test + y1 * prob_reviewer_test
@@ -238,7 +235,7 @@ def main():
     v3_train = df_all_scores['hist_mean_text'].values[idx_train]
     
     w1, w2, w3, best_thresh_2 = find_best_linear_weights_3var(y_train, v1_train, v2_train, v3_train)
-    print(f"✅ Optimal Reviewer Head Weights -> w1 (Behavior): {w1:.2f} | w2 (Curr Text): {w2:.2f} | w3 (Hist Text): {w3:.2f} | Thresh: {best_thresh_2:.2f}")
+    print(f"Optimal Reviewer Head Weights -> w1 (Behavior): {w1:.2f} | w2 (Curr Text): {w2:.2f} | w3 (Hist Text): {w3:.2f} | Thresh: {best_thresh_2:.2f}")
     
     v1_test = all_prob_behavior[idx_test]
     v2_test = all_prob_rev[idx_test]
@@ -261,7 +258,7 @@ def main():
     out_file = os.path.join(os.path.dirname(__file__), "linear_blending_ensemble_metrics.json")
     with open(out_file, "w") as f:
         json.dump(summary_out, f, indent=4)
-    print(f"\n✅ All ensemble benchmark metrics saved to: {out_file}")
+    print(f"\n All ensemble benchmark metrics saved to: {out_file}")
     print("═" * 80)
 
 if __name__ == "__main__":

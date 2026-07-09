@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 from datetime import datetime, timedelta, timezone
 import random
 
@@ -11,6 +12,13 @@ from database.models import Submitter, Reviewer, Product, Review
 from orchestrator.services import generate_universal_id
 
 def init_and_seed_db(force_recreate=False):
+    thresh_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../HGT_Heterogeneous_Graph_Model/model/best_thresholds.json"))
+    if not os.path.exists(thresh_path):
+        thresh_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/best_thresholds.json"))
+    with open(thresh_path, 'r') as f:
+        thresh_data = json.load(f)
+    review_thresh = float(thresh_data['review_threshold'])
+
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "offchain_fraud_detection.db")
     if force_recreate and os.path.exists(db_path):
         try:
@@ -103,7 +111,7 @@ def init_and_seed_db(force_recreate=False):
             rating = random.choice([1.0, 2.0, 3.0, 4.0, 5.0])
             ai_score = random.uniform(0.05, 0.95)
             deberta_prob = min(1.0, max(0.0, ai_score * random.uniform(0.8, 1.2)))
-            is_fraud = 1 if ai_score >= 0.50 else 0
+            is_fraud = 1 if ai_score >= review_thresh else 0
             loc_rev_id = f"HIST_REV_{i:03d}"
 
             review = Review(

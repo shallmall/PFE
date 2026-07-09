@@ -29,11 +29,11 @@ from web3_worker.alastria_ledger_worker import (
 
 def main():
     print("═" * 70)
-    print("  E2E Test: Alastria Blockchain Worker & Off-Chain/On-Chain DB Sync")
+    print("E2E Test: Alastria Blockchain Worker & Off-Chain/On-Chain DB Sync")
     print("═" * 70)
 
     # 1. Setup in-memory SQLite database for testing
-    print("\n📦 Setting up test database & inserting 50 un-anchored reviews...")
+    print("\n Setting up test database & inserting 50 un-anchored reviews...")
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
     Base.metadata.create_all(bind=engine)
     SessionTest = sessionmaker(bind=engine)
@@ -80,11 +80,11 @@ def main():
     db.commit()
 
     pending_before = db.query(Review).filter(Review.status == "Confirmed_OffChain").count()
-    print(f"✅ Inserted 50 reviews. Count of 'Confirmed_OffChain' in DB before sync: {pending_before}")
+    print(f"Inserted 50 reviews. Count of 'Confirmed_OffChain' in DB before sync: {pending_before}")
     assert pending_before == 50, "Failed to insert 50 reviews into DB!"
 
     # 2. Setup Simulated Web3 & Contract
-    print("\n⚡ Initializing Simulated Web3 Node & Deploying Contract...")
+    print("\n Initializing Simulated Web3 Node & Deploying Contract...")
     w3 = Web3(EthereumTesterProvider())
     
     class SimulatedAccount:
@@ -96,41 +96,41 @@ def main():
     w3.eth.default_account = w3.eth.accounts[0]
 
     contract = load_or_compile_contract(w3, account)
-    print(f"✅ Contract deployed at: {contract.address}")
+    print(f"Contract deployed at: {contract.address}")
 
     # 3. Execute Worker Sync
-    print("\n🔄 Executing sync_pending_reviews (Sweeping DB & broadcasting Web3 batch)...")
+    print("\n Executing sync_pending_reviews (Sweeping DB & broadcasting Web3 batch)...")
     synced_count = sync_pending_reviews(db, w3, contract, account, batch_limit=100)
-    print(f"✅ Synced {synced_count} records!")
+    print(f"Synced {synced_count} records!")
     assert synced_count == 50, f"Expected 50 synced records, got {synced_count}"
 
     # 4. Verify SQL DB State Transition
-    print("\n🔎 Verifying SQL Database State after receipt confirmation...")
+    print("\n Verifying SQL Database State after receipt confirmation...")
     pending_after = db.query(Review).filter(Review.status == "Confirmed_OffChain").count()
     confirmed_onchain = db.query(Review).filter(Review.status == "Confirmed_OnChain").count()
-    print(f"   • Remaining 'Confirmed_OffChain' in DB : {pending_after}")
-    print(f"   • Updated 'Confirmed_OnChain' in DB    : {confirmed_onchain}")
+    print(f"• Remaining 'Confirmed_OffChain' in DB : {pending_after}")
+    print(f"• Updated 'Confirmed_OnChain' in DB    : {confirmed_onchain}")
     assert pending_after == 0, "There should be 0 Confirmed_OffChain remaining!"
     assert confirmed_onchain == 50, "All 50 reviews should now be Confirmed_OnChain!"
 
     sample_review = db.query(Review).filter(Review.universal_review_id == "test_sub:rev_000").first()
-    print(f"   • Sample DB Record (rev_000) TX Hash   : {sample_review.tx_hash}")
+    print(f"• Sample DB Record (rev_000) TX Hash   : {sample_review.tx_hash}")
     assert sample_review.tx_hash and sample_review.tx_hash.startswith("0x"), "TX hash not properly saved in DB!"
 
     # 5. Verify Smart Contract On-Chain Storage
-    print("\n🔗 Querying Alastria Smart Contract On-Chain State...")
+    print("\n Querying Alastria Smart Contract On-Chain State...")
     rev_000_bytes16 = get_keccak_bytes16("test_sub:rev_000")
     details = contract.functions.getReviewDetails(rev_000_bytes16).call()
-    print(f"   • On-Chain Heavy Table (rev_000) -> Review Score: {details[2]} / 100 | Reviewer Score: {details[3]} / 100")
+    print(f"• On-Chain Heavy Table (rev_000) -> Review Score: {details[2]} / 100 | Reviewer Score: {details[3]} / 100")
     assert details[2] > 0, "Review score was not saved on-chain!"
 
     user_0_bytes16 = get_keccak_bytes16("test_sub:user_0")
     history = contract.functions.getReviewerHistory(user_0_bytes16).call()
-    print(f"   • On-Chain Light Table (user_0)  -> Total Mined Historical Points: {len(history)}")
+    print(f"• On-Chain Light Table (user_0)  -> Total Mined Historical Points: {len(history)}")
     assert len(history) == 10, f"Expected 10 historical records for user_0 (50 reviews / 5 users), got {len(history)}"
 
     print("\n══════════════════════════════════════════════════════════════════════")
-    print("🎉 ALL E2E BLOCKCHAIN & DATABASE SYNC TESTS PASSED PERFECTLY!")
+    print("ALL E2E BLOCKCHAIN & DATABASE SYNC TESTS PASSED PERFECTLY!")
     print("══════════════════════════════════════════════════════════════════════")
 
 if __name__ == "__main__":
