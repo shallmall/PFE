@@ -34,82 +34,55 @@ gnn_fraud_detection/
 
 ## Dataset Download & Setup Note
 
-Because the raw reviews dataset (`public_reviews_dataset_cleaned.csv`) is **~267 MB**, it exceeds GitHub's standard 100 MB file limit. 
-To run the full training pipelines or initial database seed:
-1. Download the cleaned reviews dataset from the project's **GitHub Releases** or public repository link.
-2. Place the file inside the `data/` directory so its path is exact:
+Because the cleaned e-commerce reviews dataset (`public_reviews_dataset_cleaned.csv`) is **~267 MB**, it exceeds GitHub's standard 100 MB file limit.
+To prepare the dataset:
+1. Go to the public benchmark dataset repository: [https://github.com/bretthollenbeck/fake-reviews-data](https://github.com/bretthollenbeck/fake-reviews-data) (or the project's Release assets) and download the CSV data.
+2. Place the downloaded CSV file directly inside your `./data` directory so the path is:
    ```text
-   gnn_fraud_detection/data/public_reviews_dataset_cleaned.csv
+   ./data/public_reviews_dataset_cleaned.csv
    ```
 
 ---
 
 ## Installation & Setup Guide
 
-When cloning this project from GitHub, you can set up the Python backend using either **Option A (Modern & Ultra-Fast via `uv`)** or **Option B (Standard Python via `pip`)**. Both methods fully support CUDA GPU acceleration on Windows and Linux.
-
-### Prerequisites (For All Installation Methods)
-* **Python**: Version `3.11` or `3.12` recommended.
-* **Node.js & npm**: Version `20.x` or higher (required for the web frontend UI and PM2 worker management).
-
----
-
-### Option A: Installation via `uv` (Recommended for Speed & Cleanliness)
-
-[`uv`](https://github.com/astral-sh/uv) is an ultra-fast Rust-based Python environment manager that automatically resolves GPU wheel dependencies without conflicts.
-
-1. **Install `uv` (if not already installed)**:
-   ```powershell
-   # On Windows PowerShell:
-   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-   
-   # On Linux/macOS:
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-2. **Clone the repository and sync the virtual environment**:
-   ```powershell
-   git clone https://github.com/yourusername/gnn_fraud_detection.git
-   cd gnn_fraud_detection
-   
-   # Automatically create .venv and download exact PyTorch + CUDA dependencies
-   uv sync
-   ```
-
----
-
-### Option B: Installation via Standard `pip`
-
-If you prefer standard Python virtual environments, use `requirements.txt`:
-
-1. **Clone the repository**:
-   ```powershell
-   git clone https://github.com/yourusername/gnn_fraud_detection.git
-   cd gnn_fraud_detection
-   ```
-2. **Create and activate a virtual environment**:
-   ```powershell
-   # On Windows:
-   python -m venv venv
-   .\venv\Scripts\activate
-   
-   # On Linux/macOS:
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-3. **Install exact dependencies**:
-   ```powershell
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-
----
-
-### Frontend UI Setup (`Node.js` & `npm`)
-
-To install the dependencies for the modern React web interface:
-
+### 1. Prerequisites Verification (`Node.js` & `uv`)
+Before installing the backend dependencies, verify that you have `Node.js` and `npm` installed on your system:
 ```powershell
-cd Deployment/frontend
+node -v
+npm -v
+```
+*(Requires Node.js version `20.x` or higher to manage the React frontend and background process workers).*
+
+Next, ensure you have **`uv`** installed. `uv` is an **ultra-fast Rust-based Python package and virtual environment manager** that resolves deep learning dependencies instantly:
+```powershell
+# On Windows PowerShell:
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# On Linux/macOS:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+---
+
+### 2. AI System Setup (`uv sync`)
+
+To initialize the entire AI system, you do not need manual `virtualenv` or `pip install -r requirements.txt` steps. **`uv sync` does everything automatically**: it reads `pyproject.toml`, creates a clean isolated `.venv` virtual environment inside `./`, and downloads exact PyTorch, PyG, Transformers, and Web3 libraries in seconds.
+
+Run this command directly from the root folder (`./`):
+```powershell
+uv sync
+```
+
+> **WARNING: CUDA Architecture Compatibility**  
+> By default, `pyproject.toml` and `requirements.txt` target **NVIDIA CUDA 12.1** (`+cu121`) acceleration (`https://download.pytorch.org/whl/cu121`). If you are running on a machine without an NVIDIA GPU (such as Apple Silicon Mac, AMD GPU, or pure CPU), adjust the PyTorch wheel index URL inside `pyproject.toml` to match your local hardware before running `uv sync`.
+
+---
+
+### 3. Frontend UI Setup
+To install the package dependencies for the modern React web interface:
+```powershell
+cd ./Deployment/frontend
 npm install
 cd ../..
 ```
@@ -118,30 +91,24 @@ cd ../..
 
 ## Running the Platform Locally
 
-Once your Python and Node.js environments are initialized and the dataset (`data/public_reviews_dataset_cleaned.csv`) is in place, run the following steps:
+Once your Python environment (`uv sync`), Node.js environment (`npm install`), and dataset (`./data/public_reviews_dataset_cleaned.csv`) are ready, initialize the database and start the entire platform:
 
-### 1. Initialize & Seed the Off-Chain SQLite Database
+### 1. Initialize & Seed the SQLite Database
+Run the initialization script directly from your root directory (`./`):
 ```powershell
-# Using uv:
-uv run python Deployment/database/init_db.py
-
-# Using standard pip (inside activated venv):
-python Deployment/database/init_db.py
+uv run python ./Deployment/database/init_db.py
 ```
+
+### 2. Launch All Microservices with `server.py` (Master Orchestrator)
+Instead of opening four separate terminal windows for the AI Engine, FastAPI Orchestrator, Alastria Web3 Worker, and React UI, run our unified master launcher:
+```powershell
+uv run python ./Deployment/server.py
+```
+`server.py` automatically boots all four microservice layers (`AI Engine`, `FastAPI Orchestrator on port 8000`, `Alastria Web3 Worker`, and `React UI on port 5173`) inside a single terminal with real-time color-coded logging and zero pop-up windows. Press `Ctrl+C` at any time to cleanly shut down the entire system at once.
 
 ---
 
-### Method 1: All-In-One Unified Launcher (Recommended)
-Instead of opening multiple terminal windows, you can launch **all 4 microservice layers** (AI Engine, FastAPI Orchestrator, Alastria Web3 Worker, and React Frontend UI) inside **a single terminal** with real-time color-coded logging and zero DOS window pop-ups:
-
-```powershell
-uv run python Deployment/server.py
-```
-*(Press `Ctrl+C` anytime to cleanly shut down the entire microservice stack at once).*
-
----
-
-### Method 2: Manual Multi-Terminal Launch (If running services individually)
+### Alternative: Manual Multi-Terminal Launch (If running services individually)
 
 #### A. Start the Backend API & AI Engine (Terminal 1)
 ```powershell
