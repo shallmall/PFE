@@ -310,3 +310,13 @@ xxhash==3.7.0
     # via torch-geometric
 yarl==1.24.2
     # via aiohttp
+
+# --- PyTorch Geometric C++ Hardware Extensions ---
+# WARNING: These packages are compiled specifically for Torch 2.5.1 and CUDA 12.1.
+# If you are on Apple Silicon, AMD GPU, or a different Torch version, pip will crash with WinError 127.
+# You must change the --find-links URL below to match your specific hardware before installing!
+--find-links https://data.pyg.org/whl/torch-2.5.1+cu121.html
+pyg-lib==0.4.0+pt25cu121
+torch-cluster==1.6.3+pt25cu121
+torch-scatter==2.1.2+pt25cu121
+torch-sparse==0.6.18+pt25cu121
