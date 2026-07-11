@@ -46,6 +46,24 @@ To prepare the dataset:
 
 ---
 
+## Pre-Trained DeBERTa Model Setup
+
+The core NLP classification engine relies on a heavily fine-tuned DeBERTa-v3 model. You have two options to prepare this model:
+
+**Option 1: Download the Fine-Tuned Model (Recommended)**
+1. Download the pre-trained model weights from Google Drive: [https://drive.google.com/file/d/12JV-zwgF8m4ZWuISgzGp5ZsrKqyd9w0c/view?usp=sharing](https://drive.google.com/file/d/12JV-zwgF8m4ZWuISgzGp5ZsrKqyd9w0c/view?usp=sharing)
+2. Extract the downloaded `.zip` file.
+3. Place all extracted contents directly into the following folder so the inference script can find them:
+   ```text
+   ./SpamVis_DeBERTa-v3-base_Model
+   ```
+
+**Option 2: Fine-Tune it Yourself**
+If you prefer to train the semantic model from scratch on your own GPU, you can run the interactive training workflow using the provided Jupyter Notebook:
+`./SpamVis_DeBERTa-v3-base_Model/DeBERTa V3 Training Notebook.ipynb`
+
+---
+
 ## Installation & Setup Guide
 
 ### 1. Prerequisites Verification (`Node.js` & `uv`)
@@ -76,8 +94,8 @@ Run this command directly from the root folder (`./`):
 uv sync
 ```
 
-> **WARNING: CUDA Architecture Compatibility**  
-> By default, `pyproject.toml` and `requirements.txt` target **NVIDIA CUDA 12.1** (`+cu121`) acceleration (`https://download.pytorch.org/whl/cu121`). If you are running on a machine without an NVIDIA GPU (such as Apple Silicon Mac, AMD GPU, or pure CPU), adjust the PyTorch wheel index URL inside `pyproject.toml` to match your local hardware before running `uv sync`.
+> **WARNING: Hardware-Dependent Libraries (CUDA Compatibility)**  
+> Disclaimer: Deep learning libraries such as `torch`, `torchvision`, and the PyTorch Geometric C++ extensions (`pyg-lib`, `torch-scatter`, etc.) are heavily affected by your specific GPU architecture and CUDA version. By default, `pyproject.toml` and `requirements.txt` target **NVIDIA CUDA 12.1** (`+cu121`) acceleration (`https://download.pytorch.org/whl/cu121`). If you are running on a machine without an NVIDIA GPU (such as Apple Silicon Mac, AMD GPU, or pure CPU), you must adjust the PyTorch wheel index URL inside `pyproject.toml` to match your local hardware before running `uv sync` to prevent installation crashes (e.g. `WinError 127`).
 
 ---
 
