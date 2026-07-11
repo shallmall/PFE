@@ -1,4 +1,9 @@
 """
+To generate the csv needed to train those models we need to run those pieces of code first:
+1. uv run HGT_Heterogeneous_Graph_Model\export_predictions_csv.py
+2. uv run SpamVis_DeBERTa-v3-base_Model\run_deberta_csv_inference.py
+2. uv run late_Fusion_Score-Level_Integration\prepare_temporal_features.py
+
 Train Late Fusion Multi-Model Reputation AI System (Pure 2-Feature Score-Level Integration)
 =============================================================================================
 Trains 4 distinct machine learning architectures on exact 2-feature point-in-time score pairs:
