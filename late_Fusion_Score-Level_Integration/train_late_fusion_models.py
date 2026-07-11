@@ -196,7 +196,7 @@ def main():
     lgb_rev.fit(X_rev_train, y_train, eval_set=[(X_rev_val, y_val)], callbacks=[lgb.early_stopping(stopping_rounds=20, verbose=False)])
     review_val_lgb = lgb_rev.predict_proba(X_rev_val)[:, 1]
     best_thresh_rev_lgb = find_best_threshold(y_val, review_val_lgb)
-
+    review_pred_lgb = lgb_rev.predict_proba(X_rev_test)[:, 1]
     metrics_r_lgb = calculate_metrics(y_test, rev_pred_lgb, threshold=best_thresh_r_lgb)
     metrics_rev_lgb = calculate_metrics(y_test, review_pred_lgb, threshold=best_thresh_rev_lgb)
     print(f"Trained & evaluated LightGBM in {time.time() - t0:.2f}s (Val Tuned Thresholds -> Reviewer: {best_thresh_r_lgb:.2f}, Review: {best_thresh_rev_lgb:.2f})")
