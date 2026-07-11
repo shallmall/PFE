@@ -92,7 +92,7 @@ To initialize the entire AI system, you do not need manual `virtualenv` or `pip 
 Run this command directly from the root folder (`./`):
 ```powershell
 uv sync
-uv add gensim textstat vaderSentiment nltk
+uv add gensim textstat vaderSentiment nltk transformers>=4.48.0
 ```
 
 **CRITICAL: Install PyTorch Geometric Hardware Extensions**
