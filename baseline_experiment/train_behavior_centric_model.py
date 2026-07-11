@@ -171,9 +171,9 @@ def main():
     print("Behavior-Centric Model (Rolling State Evaluation)")
     print("=" * 60)
     
-    data_path = os.path.join("..", "data", "final_enriched_reviews_dataset.csv")
+    data_path = os.path.join("..", "data", "public_reviews_dataset_cleaned.csv")
     if not os.path.exists(data_path):
-        data_path = os.path.join("data", "final_enriched_reviews_dataset.csv")
+        data_path = os.path.join("data", "public_reviews_dataset_cleaned.csv")
         
     print(f"Loading raw data from {data_path}...")
     df_raw = pd.read_csv(data_path, low_memory=False)
