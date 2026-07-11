@@ -94,6 +94,14 @@ Run this command directly from the root folder (`./`):
 uv sync
 ```
 
+**CRITICAL: Install PyTorch Geometric Hardware Extensions**
+Because the Graph Neural Network (HGT) relies on C++ extensions that must precisely match your local hardware (Mac/Apple Silicon, Windows AMD, or NVIDIA CUDA), we have provided an automated script. 
+
+**Order matters:** You must run this script *strictly after* `uv sync` finishes. The script uses the PyTorch library installed by `uv sync` to automatically detect your exact hardware architecture and fetch the matching C++ binaries without crashing.
+```powershell
+uv run python install_pyg.py
+```
+
 > **WARNING: Hardware-Dependent Libraries (CUDA Compatibility)**  
 > Disclaimer: Deep learning libraries such as `torch`, `torchvision`, and the PyTorch Geometric C++ extensions (`pyg-lib`, `torch-scatter`, etc.) are heavily affected by your specific GPU architecture and CUDA version. By default, `pyproject.toml` and `requirements.txt` target **NVIDIA CUDA 12.1** (`+cu121`) acceleration (`https://download.pytorch.org/whl/cu121`). If you are running on a machine without an NVIDIA GPU (such as Apple Silicon Mac, AMD GPU, or pure CPU), you must adjust the PyTorch wheel index URL inside `pyproject.toml` to match your local hardware before running `uv sync` to prevent installation crashes (e.g. `WinError 127`).
 
