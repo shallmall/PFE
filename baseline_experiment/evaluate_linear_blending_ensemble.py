@@ -121,7 +121,7 @@ def main():
     print("Baseline Linear Weighted Blending Ensemble (Text & Behavior Centric)")
     print("═" * 80)
     
-    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "final_enriched_reviews_dataset.csv")
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "public_reviews_dataset_cleaned.csv")
     print(f"Loading raw data from {data_path}...")
     df_raw = pd.read_csv(data_path, low_memory=False)
     
