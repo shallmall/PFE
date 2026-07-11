@@ -111,10 +111,10 @@ def main():
     print("Text-Centric Model (Linguistic + FastText)")
     print("=" * 60)
     
-    data_path = os.path.join("..", "data", "final_enriched_reviews_dataset.csv")
+    data_path = os.path.join("..", "data", "public_reviews_dataset_cleaned.csv")
     if not os.path.exists(data_path):
         # Try finding it in root
-        data_path = os.path.join("data", "final_enriched_reviews_dataset.csv")
+        data_path = os.path.join("data", "public_reviews_dataset_cleaned.csv")
         
     print(f"Loading data from {data_path}...")
     df = pd.read_csv(data_path, low_memory=False)
