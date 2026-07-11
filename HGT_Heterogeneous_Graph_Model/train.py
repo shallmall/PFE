@@ -1,3 +1,9 @@
+"""
+before running this and training the model we need to run this:
+uv run HGT_Heterogeneous_Graph_Model\build_graph.py
+
+where we build the graph before training it
+"""
 import os
 import torch
 import torch.nn as nn
